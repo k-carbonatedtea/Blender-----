@@ -1,0 +1,42 @@
+[package]
+name = "rust-gui-example"
+version = "0.1.0"
+edition = "2021"
+
+# 添加资源打包配置
+[package.metadata.bundle]
+name = "Blender本地化文件转换工具"
+identifier = "com.example.blenderlocalizer"
+icon = ["assets/icon.png"]
+resources = ["Fonts/*"]
+copyright = "Copyright (c) 2023 Your Name"
+category = "Utility"
+
+# 指定要包含在构建中的文件
+[package.metadata]
+resources = ["Fonts/msyh.ttf"]
+
+[dependencies]
+egui = "0.22.0"
+eframe = "0.22.0"
+chrono = "0.4.31"
+rayon = "1.8.0"
+num_cpus = "1.16.0"
+polib = "0.1.0"
+rfd = "0.11.4"
+encoding_rs = "0.8.33"
+egui_extras = "0.22.0"
+gettext = "0.4.0"
+dirs = "5.0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4.17"
+env_logger = "0.10.0"
+threadpool = "1.8.1"
+
+# winapi相关依赖
+winapi = { version = "0.3.9", features = ["windef", "winuser"] }
+
+# 添加打包和发布相关的依赖
+[build-dependencies]
+copy_to_output = "2.1.0"  # 帮助复制资源文件的工具
