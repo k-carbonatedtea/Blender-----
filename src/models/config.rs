@@ -1,8 +1,24 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::fs;
 use std::io;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
+
+/// 定义可选的主题
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum AppTheme {
+    Light,        // 明亮主题
+    Dark,         // 暗黑主题
+    NightBlue,    // 夜间蓝
+    Sepia,        // 护眼模式
+    Forest,       // 森林绿
+}
+
+impl Default for AppTheme {
+    fn default() -> Self {
+        AppTheme::Dark
+    }
+}
 
 /// 应用配置，用于存储和加载设置
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -11,7 +27,11 @@ pub struct AppConfig {
     pub main_mo_file: Option<PathBuf>,
     // 语言包目录
     pub mods_directory: Option<PathBuf>,
-    // 界面主题 (深色/浅色)
+    // 输出目录，用于存放合并后的MO文件
+    pub output_directory: Option<PathBuf>,
+    // 界面主题
+    pub theme: AppTheme,
+    // 为了向后兼容保留的深色模式标志
     pub dark_mode: bool,
     // 自动批处理
     pub auto_batch: bool,
@@ -28,6 +48,8 @@ impl Default for AppConfig {
         Self {
             main_mo_file: None,
             mods_directory: None,
+            output_directory: None,
+            theme: AppTheme::default(),
             dark_mode: true,
             auto_batch: false,
             auto_close: false,
@@ -78,6 +100,7 @@ impl AppConfig {
     }
     
     /// 更新配置并保存
+    #[allow(dead_code)]
     pub fn update_and_save(&mut self, new_config: AppConfig) -> io::Result<()> {
         *self = new_config;
         self.save()
@@ -97,6 +120,7 @@ fn get_config_path() -> PathBuf {
 }
 
 /// 获取缓存目录路径
+#[allow(dead_code)]
 pub fn get_cache_dir() -> PathBuf {
     if let Some(local_dir) = dirs::data_local_dir() {
         local_dir.join("BLMM")
@@ -106,6 +130,7 @@ pub fn get_cache_dir() -> PathBuf {
 }
 
 /// 确保缓存目录存在
+#[allow(dead_code)]
 pub fn ensure_cache_dir() -> io::Result<PathBuf> {
     let cache_dir = get_cache_dir();
     fs::create_dir_all(&cache_dir)?;

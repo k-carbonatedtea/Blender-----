@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::sync::{Arc, Mutex};
-use rayon::prelude::*;
 
 /// 合并多个PO文件
 /// 

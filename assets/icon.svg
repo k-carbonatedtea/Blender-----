@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <g>
+    <!-- 手形图案 -->
+    <path d="M80,220 C60,200 60,170 80,150 C100,130 130,130 150,150 L180,180" 
+          stroke="#8e44ad" stroke-width="20" fill="none" stroke-linecap="round"/>
+    <path d="M110,250 C90,230 90,200 110,180 C130,160 160,160 180,180 L210,210" 
+          stroke="#8e44ad" stroke-width="20" fill="none" stroke-linecap="round"/>
+    <path d="M140,280 C120,260 120,230 140,210 C160,190 190,190 210,210 L240,240" 
+          stroke="#8e44ad" stroke-width="20" fill="none" stroke-linecap="round"/>
+    
+    <!-- 手掌部分 -->
+    <path d="M170,300 L170,230 L240,230 L240,300 C240,320 220,340 205,340 C190,340 170,320 170,300Z" 
+          fill="#e91e63"/>
+    <path d="M240,300 L240,230 L310,230 L280,300 C280,320 260,340 245,340 C230,340 240,320 240,300Z" 
+          fill="#e91e63"/>
+    
+    <!-- BLMM文字 -->
+    <text x="260" y="280" font-family="Arial" font-size="80" font-weight="bold" fill="#e91e63">
+      BLMM
+    </text>
+  </g>
+</svg> 

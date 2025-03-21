@@ -1,0 +1,7 @@
+// Windows资源文件
+
+// 定义应用程序图标
+MAINICON ICON "../assets/icon.ico"
+
+// 定义应用程序需要的管理员权限
+1 24 "..\\winres\\app.manifest" 

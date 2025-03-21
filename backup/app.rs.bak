@@ -629,8 +629,8 @@ impl App {
 
             // 添加"安装语言包"按钮，使用强调色
             if ui.add(egui::Button::new(RichText::new("安装语言包(可多选)").color(accent_color))
-                .min_size(egui::vec2(150.0, 24.0)))
-                .clicked() {
+                     .min_size(egui::vec2(150.0, 24.0)))
+                     .clicked() {
                 self.install_new_mod();
             }
 
@@ -669,10 +669,9 @@ impl App {
                                 RichText::new("应用到MO文件").color(Color32::LIGHT_BLUE)
                             };
                             
-                            let button = egui::Button::new(button_text)
-                                .min_size(egui::vec2(130.0, 28.0));
-                                
-                            if ui.add(button).clicked() {
+                            if ui.add(button_text)
+                                .min_size(egui::vec2(130.0, 28.0)))
+                                .clicked() {
                                 // 设置合并状态并启动线程
                                 self.state.is_merging = true;
                                 self.state.merge_progress = 0.0;
@@ -833,13 +832,7 @@ impl App {
                                     
                                     ui.label(format!("{}", index)); // Priority
                                     ui.label(mod_info.version.as_deref().unwrap_or("1.0.0")); // Version
-                                    
-                                    // Display original file type if available, otherwise use description or default
-                                    if let Some(orig_type) = &mod_info.original_type {
-                                        ui.label(format!("从{}转换的PO文件", orig_type));
-                                    } else {
-                                        ui.label(mod_info.description.as_deref().unwrap_or("语言包")); // Category
-                                    }
+                                    ui.label(mod_info.description.as_deref().unwrap_or("语言包")); // Category
                                 });
                             });
 
@@ -1187,7 +1180,7 @@ impl App {
                     
                     // 添加按钮并处理点击事件
                     if ui.add(button).clicked() {
-                        self.config.theme = theme.clone();
+                        self.config.theme = theme;
                         self.state.dark_mode = theme != crate::models::AppTheme::Light 
                             && theme != crate::models::AppTheme::Sepia;
                     }
@@ -1233,9 +1226,6 @@ impl App {
                     
                     // 添加日志
                     self.state.add_log(&format!("已设置主MO文件: {}", mo_path.display()));
-                    
-                    // 将文件克隆到BLMM文件夹
-                    self.clone_main_mo_to_blmm(&mo_path);
                 }
             }
             
@@ -1469,7 +1459,6 @@ impl App {
                 // 如果来自CSV，添加描述
                 if file_ext == "csv" {
                     mod_info.description = Some("从CSV转换的PO文件".to_string());
-                    mod_info.original_type = Some("CSV".to_string());
                 }
                 
                 // 将PO文件复制到MOD目录
@@ -1478,27 +1467,10 @@ impl App {
                 // 尝试复制文件
                 match std::fs::copy(&processed_file, &target_path) {
                     Ok(_) => {
-                        mod_info.path = target_path.clone();
+                        mod_info.path = target_path;
                         
                         // 在配置中保存该mod的启用状态
                         self.config.saved_mods.insert(file_name.clone(), true);
-                        
-                        // 如果存在原始文件类型信息，创建元数据JSON文件
-                        if let Some(orig_type) = &mod_info.original_type {
-                            let metadata_path = target_path.with_extension("json");
-                            let metadata = serde_json::json!({
-                                "name": file_name,
-                                "original_type": orig_type,
-                                "install_date": chrono::Local::now().to_rfc3339()
-                            });
-                            
-                            // 将元数据写入JSON文件
-                            if let Ok(json_str) = serde_json::to_string_pretty(&metadata) {
-                                if let Err(e) = std::fs::write(&metadata_path, json_str) {
-                                    self.state.add_log(&format!("无法写入元数据文件: {}", e));
-                                }
-                            }
-                        }
                         
                         self.state.installed_mods.push(mod_info);
                         
@@ -1584,23 +1556,7 @@ impl App {
                             let file_name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
                             let mut mod_info = ModInfo::default();
                             mod_info.name = file_name.clone();
-                            mod_info.path = path.clone();
-                            
-                            // 尝试读取同名的json元数据文件
-                            let metadata_path = path.with_extension("json");
-                            if metadata_path.exists() {
-                                if let Ok(meta_content) = std::fs::read_to_string(&metadata_path) {
-                                    if let Ok(json) = serde_json::from_str::<serde_json::Value>(&meta_content) {
-                                        // 尝试获取原始文件类型
-                                        if let Some(orig_type) = json.get("original_type").and_then(|v| v.as_str()) {
-                                            mod_info.original_type = Some(orig_type.to_string());
-                                            if orig_type == "CSV" {
-                                                mod_info.description = Some("从CSV转换的PO文件".to_string());
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            mod_info.path = path;
                             
                             // 从配置中加载该mod的启用状态
                             if let Some(enabled) = self.config.saved_mods.get(&file_name) {
@@ -2266,75 +2222,6 @@ impl App {
             }
         }
     }
-
-    // 添加合并PO文件方法
-    fn merge_po_files(&mut self) {
-        // 检查是否有主MO文件
-        if self.state.main_mo_file.is_none() {
-            self.state.add_log("错误: 请先在设置中设置主MO文件");
-            return;
-        }
-        
-        // 检查是否有启用的语言包
-        let enabled_mods = self.state.installed_mods.iter()
-            .filter(|m| m.status == ModStatus::Enabled)
-            .count();
-            
-        if enabled_mods == 0 && !self.state.needs_remerge {
-            self.state.add_log("错误: 没有启用的语言包需要合并");
-            return;
-        }
-        
-        // 设置合并状态
-        self.state.is_merging = true;
-        self.state.merge_progress = 0.0;
-        self.state.merge_progress_anim = 0;
-        
-        // 在线程中执行合并，以避免UI冻结
-        let tx = self.merge_tx.clone();
-        let po_files: Vec<PathBuf> = self.state.installed_mods.iter()
-            .filter(|m| m.status == ModStatus::Enabled)
-            .map(|m| m.path.clone())
-            .collect();
-        let ignore_main = self.state.ignore_main_mo_entries;
-        
-        self.thread_pool.spawn(move || {
-            // 通知开始
-            let _ = tx.send(MergeStatus::Started);
-            
-            // 创建缓存目录
-            let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
-                local_dir.join("BLMM").join("cache")
-            } else {
-                std::env::temp_dir().join("BLMM").join("cache")
-            };
-            
-            if let Err(e) = std::fs::create_dir_all(&cache_dir) {
-                let _ = tx.send(MergeStatus::Failed(format!("创建缓存目录失败: {}", e)));
-                return;
-            }
-            
-            // 缓存合并PO的路径
-            let cached_po_path = cache_dir.join("cached_merged.po");
-            
-            // 更新进度 25%
-            let _ = tx.send(MergeStatus::Progress(0.25));
-            
-            // 合并PO文件
-            match po_merger::merge_po_files(&po_files, &cached_po_path, ignore_main) {
-                Ok(_) => {
-                    // 更新进度 75%
-                    let _ = tx.send(MergeStatus::Progress(0.75));
-                    
-                    // 完成
-                    let _ = tx.send(MergeStatus::Completed(cached_po_path));
-                },
-                Err(e) => {
-                    let _ = tx.send(MergeStatus::Failed(format!("合并PO文件失败: {}", e)));
-                }
-            }
-        });
-    }
 }
 
 impl eframe::App for App {
@@ -2356,9 +2243,9 @@ impl eframe::App for App {
         // 顶部菜单栏
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
-                // 移除全局暗/亮模式按钮
-                // egui::widgets::global_dark_light_mode_buttons(ui);
-                // ui.add_space(8.0);
+                // 全局暗/亮模式按钮
+                egui::widgets::global_dark_light_mode_buttons(ui);
+                ui.add_space(8.0);
                 
                 // 文件菜单
                 ui.menu_button("文件", |ui| {

@@ -7,14 +7,14 @@ edition = "2021"
 [package.metadata.bundle]
 name = "Blender本地化文件转换工具"
 identifier = "com.example.blenderlocalizer"
-icon = ["assets/icon.png"]
+icon = ["assets/icon.svg"]
 resources = ["Fonts/*"]
 copyright = "Copyright (c) 2023 Your Name"
 category = "Utility"
 
 # 指定要包含在构建中的文件
 [package.metadata]
-resources = ["Fonts/msyh.ttf"]
+resources = ["Fonts/msyh.ttf", "assets/icon.svg"]
 
 [dependencies]
 egui = "0.22.0"
@@ -33,10 +33,17 @@ serde_json = "1.0"
 log = "0.4.17"
 env_logger = "0.10.0"
 threadpool = "1.8.1"
+walkdir = "2.4.0"      # 用于递归遍历目录
+whoami = "1.4.1"       # 用于获取当前用户名
+is_elevated = "0.1.2"  # 用于检测程序是否以管理员权限运行
+open = "4.1.0"         # 用于打开文件和目录的跨平台库
+image = "0.24.7"       # 用于处理图像数据
 
 # winapi相关依赖
-winapi = { version = "0.3.9", features = ["windef", "winuser"] }
+winapi = { version = "0.3.9", features = ["windef", "winuser", "shellapi", "winerror", "errhandlingapi", "winbase", "processthreadsapi", "handleapi"] }
+embed-manifest = "1.4.0"
 
 # 添加打包和发布相关的依赖
 [build-dependencies]
 copy_to_output = "2.1.0"  # 帮助复制资源文件的工具
+winres = "0.1.12"        # 用于嵌入Windows资源和manifest

@@ -15,8 +15,7 @@ use crate::converters::po_converter::PoConverter;
 use crate::converters::po_merger;
 use crate::converters::csv_converter::CsvConverter;
 
-// 添加合并状态枚举
-pub enum MergeStatus {
+// 添加合并状态枚�?pub enum MergeStatus {
     Started,
     Progress(f32),
     Completed(PathBuf),
@@ -56,12 +55,10 @@ impl App {
         // 加载配置文件
         let mut config = AppConfig::load();
         
-        // 创建应用状态并从配置中设置值
-        let mut state = AppState::default();
+        // 创建应用状态并从配置中设置�?        let mut state = AppState::default();
         state.main_mo_file = config.main_mo_file.clone();
         
-        // 设置固定的语言包目录
-        let mods_dir = if let Some(local_dir) = dirs::data_local_dir() {
+        // 设置固定的语言包目�?        let mods_dir = if let Some(local_dir) = dirs::data_local_dir() {
             local_dir.join("BLMM").join("mods")
         } else {
             std::env::temp_dir().join("BLMM").join("mods")
@@ -86,8 +83,7 @@ impl App {
         state.show_logs = config.show_logs;
         state.ignore_main_mo_entries = config.ignore_main_mo_entries;
         
-        // 默认显示语言包管理界面
-        state.show_mods = true;
+        // 默认显示语言包管理界�?        state.show_mods = true;
         state.show_mods_tab = ModsTab::Mods;
             
         let mut app = Self {
@@ -104,8 +100,7 @@ impl App {
             install_path: String::new(),
         };
         
-        // 启动时自动扫描语言包目录
-        app.scan_mods_directory();
+        // 启动时自动扫描语言包目�?        app.scan_mods_directory();
         
         app
     }
@@ -135,8 +130,7 @@ impl App {
                         }
                     }
                     
-                    // 检查是否有待处理的任务，如果有，则自动开始
-                    if self.state.auto_batch {
+                    // 检查是否有待处理的任务，如果有，则自动开�?                    if self.state.auto_batch {
                         let next_pending = self.state.operations.iter().enumerate()
                             .find(|(_, op)| op.status == ConversionStatus::Pending)
                             .map(|(i, _)| i);
@@ -146,7 +140,7 @@ impl App {
                         }
                     }
                 } else {
-                    self.state.add_log(&format!("错误: 收到无效的操作索引 {}", index));
+                    self.state.add_log(&format!("错误: 收到无效的操作索�?{}", index));
                 }
             }
         }
@@ -156,7 +150,7 @@ impl App {
     fn convert_file(&mut self, operation_index: usize) {
         if operation_index < self.state.operations.len() {
             // 添加调试日志
-            self.state.add_log(&format!("开始转换任务 #{}", operation_index + 1));
+            self.state.add_log(&format!("开始转换任�?#{}", operation_index + 1));
             self.start_conversion(operation_index);
         }
     }
@@ -168,8 +162,7 @@ impl App {
         
         let operation = self.state.operations[operation_index].clone();
         self.state.operations[operation_index].status = ConversionStatus::Processing;
-        // 记录开始时间
-        self.state.operations[operation_index].start_time = Some(Instant::now());
+        // 记录开始时�?        self.state.operations[operation_index].start_time = Some(Instant::now());
         
         if let Some(tx) = self.tx.clone() {
             let pool = self.thread_pool.clone();
@@ -202,18 +195,16 @@ impl App {
     }
     
     fn render_header(&mut self, ui: &mut Ui) {
-        // 获取主题的强调色，用于标题
-        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
+        // 获取主题的强调色，用于标�?        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
         
-        ui.heading(RichText::new("Blender字典合并管理器 By:凌川雪").color(accent_color));
-        ui.label("快速将语言包PO文件转换并合并到MO文件中");
+        ui.heading(RichText::new("Blender字典合并管理�?By:凌川�?).color(accent_color));
+        ui.label("快速将语言包PO文件转换并合并到MO文件�?);
         
         ui.add_space(10.0);
     }
     
     fn render_operations(&mut self, ui: &mut Ui) {
-        // 获取主题的强调色，用于标题
-        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
+        // 获取主题的强调色，用于标�?        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
         
         ui.heading(RichText::new("文件列表").color(accent_color));
         
@@ -231,8 +222,8 @@ impl App {
                 ui.vertical(|ui| {
                     ui.horizontal(|ui| {
                         ui.label("类型: ");
-                        ui.radio_value(&mut operation.conversion_type, ConversionType::MoToPo, "MO → PO");
-                        ui.radio_value(&mut operation.conversion_type, ConversionType::PoToMo, "PO → MO");
+                        ui.radio_value(&mut operation.conversion_type, ConversionType::MoToPo, "MO �?PO");
+                        ui.radio_value(&mut operation.conversion_type, ConversionType::PoToMo, "PO �?MO");
                     });
                     
                     ui.horizontal(|ui| {
@@ -244,8 +235,7 @@ impl App {
                                           |name| name.to_string_lossy().to_string());
                             let response = ui.label(file_name);
                             
-                            // 悬停时显示完整路径
-                            let full_path = input.to_string_lossy().to_string();
+                            // 悬停时显示完整路�?                            let full_path = input.to_string_lossy().to_string();
                             response.on_hover_text(full_path);
                         } else {
                             ui.label("[未设置]");
@@ -265,8 +255,7 @@ impl App {
                                           |name| name.to_string_lossy().to_string());
                             let response = ui.label(file_name);
                             
-                            // 悬停时显示完整路径
-                            let full_path = output.to_string_lossy().to_string();
+                            // 悬停时显示完整路�?                            let full_path = output.to_string_lossy().to_string();
                             response.on_hover_text(full_path);
                         } else {
                             ui.label("[未设置]");
@@ -278,29 +267,28 @@ impl App {
                     });
                     
                     ui.horizontal(|ui| {
-                        ui.label("状态: ");
+                        ui.label("状�? ");
                         match operation.status {
                             ConversionStatus::Pending => {
                                 ui.label(operation.status.to_string());
-                                if ui.button("开始").clicked() {
+                                if ui.button("开�?).clicked() {
                                     start_conversion_index = Some(i);
                                 }
                             },
                             ConversionStatus::Processing => {
                                 if let Some(start) = operation.start_time {
                                     let elapsed = start.elapsed();
-                                    ui.label(format!("处理中 ({:.2}秒)...", elapsed.as_secs_f64()));
+                                    ui.label(format!("处理�?({:.2}�?...", elapsed.as_secs_f64()));
                                 } else {
-                                    ui.label("处理中...");
+                                    ui.label("处理�?..");
                                 }
                             },
                             ConversionStatus::Completed => {
-                                // 获取成功状态颜色
-                                let (_success_color, _warning_color, _error_color, _info_color) =
+                                // 获取成功状态颜�?                                let (_success_color, _warning_color, _error_color, _info_color) =
                                     crate::models::ThemeManager::get_status_colors();
                                 ui.label(RichText::new("完成").color(Color32::LIGHT_BLUE));
                                 if let Some(duration) = operation.duration {
-                                    ui.label(format!("({:.3}秒)", duration));
+                                    ui.label(format!("({:.3}�?", duration));
                                 }
                                 if let Some(elapsed_ms) = operation.elapsed_milliseconds {
                                     ui.label(format!("[{}毫秒]", elapsed_ms));
@@ -311,8 +299,7 @@ impl App {
                                 }
                             },
                             ConversionStatus::Failed => {
-                                // 获取错误状态颜色
-                                let (_success_color, _warning_color, _error_color, _info_color) =
+                                // 获取错误状态颜�?                                let (_success_color, _warning_color, _error_color, _info_color) =
                                     crate::models::ThemeManager::get_status_colors();
                                 ui.label(RichText::new("失败").color(Color32::RED));
                                 if let Some(error) = &operation.error {
@@ -349,8 +336,7 @@ impl App {
                     .pick_file() {
                         operation.input_file = Some(file.clone());
                         
-                        // 自动设置输出文件名
-                        let mut output_file = file.clone();
+                        // 自动设置输出文件�?                        let mut output_file = file.clone();
                         let new_ext = if ext == "mo" { "po" } else { "mo" };
                         output_file.set_extension(new_ext);
                         operation.output_file = Some(output_file);
@@ -399,8 +385,7 @@ impl App {
             }
         }
         
-        // 处理开始转换操作
-        if let Some(i) = start_conversion_index {
+        // 处理开始转换操�?        if let Some(i) = start_conversion_index {
             self.convert_file(i);
         }
         
@@ -436,11 +421,11 @@ impl App {
             
             ui.separator();
             
-            ui.checkbox(&mut self.state.auto_close, "处理完成后自动关闭");
-            ui.checkbox(&mut self.state.auto_batch, "自动批处理");
+            ui.checkbox(&mut self.state.auto_close, "处理完成后自动关�?);
+            ui.checkbox(&mut self.state.auto_batch, "自动批处�?);
             
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.label(format!("线程池: {} 线程", num_cpus::get()));
+                ui.label(format!("线程�? {} 线程", num_cpus::get()));
             });
         });
     }
@@ -452,15 +437,14 @@ impl App {
                     ui.label(log);
                 }
                 
-                // 自动滚动到底部
-                if !self.state.logs.is_empty() {
+                // 自动滚动到底�?                if !self.state.logs.is_empty() {
                     ui.scroll_to_cursor(Some(egui::Align::BOTTOM));
                 }
             });
         });
     }
     
-    fn render_settings(&mut self, ctx: &egui::Context) {
+    fn render_settings(&mut self, _ctx: &egui::Context) {
         if self.state.show_settings {
             // 当通过菜单打开设置窗口时，自动切换到语言包管理器的设置标签页
             self.state.show_mods = true;
@@ -469,14 +453,12 @@ impl App {
         }
     }
     
-    // 打开文件选择对话框
-    #[allow(dead_code)]
+    // 打开文件选择对话�?    #[allow(dead_code)]
     fn open_file_dialog(&mut self) {
         // 创建一个新的操作，使用当前应用状态的转换类型
         let mut new_operation = FileOperation::default();
         
-        // 根据当前转换类型设置文件过滤器
-        let ext = match new_operation.conversion_type {
+        // 根据当前转换类型设置文件过滤�?        let ext = match new_operation.conversion_type {
             ConversionType::MoToPo => "mo",
             _ => "po"
         };
@@ -484,39 +466,33 @@ impl App {
         // 添加调试日志
         self.state.add_log(&format!("正在选择{}文件...", ext));
         
-        // 打开文件选择对话框
-        if let Some(file) = rfd::FileDialog::new()
+        // 打开文件选择对话�?        if let Some(file) = rfd::FileDialog::new()
             .add_filter("文件", &[ext])
             .set_title(&format!("选择{}文件", ext))
                                 .pick_file() {
                 new_operation.input_file = Some(file.clone());
                                     
-                                    // 自动设置输出文件名
-                let mut output_file = file.clone();
+                                    // 自动设置输出文件�?                let mut output_file = file.clone();
                 let new_ext = if ext == "mo" { "po" } else { "mo" };
                 output_file.set_extension(new_ext);
                 new_operation.output_file = Some(output_file.clone());
                 
-                // 添加到操作列表
-                self.state.operations.push(new_operation);
-                self.state.add_log(&format!("已添加新任务: {} → {}", 
+                // 添加到操作列�?                self.state.operations.push(new_operation);
+                self.state.add_log(&format!("已添加新任务: {} �?{}", 
                     file.display(), 
                     output_file.display()));
             } else {
-                self.state.add_log("文件选择已取消");
+                self.state.add_log("文件选择已取�?);
             }
     }
     
-    // 批量处理所有待处理的文件
-    fn batch_process(&mut self) {
-        // 获取所有待处理的文件索引
-        let pending_indices: Vec<usize> = self.state.operations.iter().enumerate()
+    // 批量处理所有待处理的文�?    fn batch_process(&mut self) {
+        // 获取所有待处理的文件索�?        let pending_indices: Vec<usize> = self.state.operations.iter().enumerate()
             .filter(|(_, op)| op.status == ConversionStatus::Pending)
             .map(|(i, _)| i)
             .collect();
             
-        // 开始处理第一个文件
-        if let Some(&index) = pending_indices.first() {
+        // 开始处理第一个文�?        if let Some(&index) = pending_indices.first() {
             self.convert_file(index);
         }
     }
@@ -528,12 +504,10 @@ impl App {
 
     // 添加新的文件选择对话框函数，可以指定转换类型
     fn open_specific_file_dialog(&mut self, conversion_type: ConversionType) {
-        // 创建一个新的操作，设置指定的转换类型
-        let mut new_operation = FileOperation::default();
+        // 创建一个新的操作，设置指定的转换类�?        let mut new_operation = FileOperation::default();
         new_operation.conversion_type = conversion_type;
         
-        // 根据转换类型设置文件过滤器
-        let ext = match conversion_type {
+        // 根据转换类型设置文件过滤�?        let ext = match conversion_type {
             ConversionType::MoToPo => "mo",
             ConversionType::PoToMo => "po",
         };
@@ -541,38 +515,34 @@ impl App {
         // 添加调试日志
         self.state.add_log(&format!("正在选择{}文件...", ext));
         
-        // 打开文件选择对话框
-        if let Some(file) = rfd::FileDialog::new()
+        // 打开文件选择对话�?        if let Some(file) = rfd::FileDialog::new()
             .add_filter("文件", &[ext])
             .set_title(&format!("选择{}文件", ext))
             .pick_file() 
         {
             new_operation.input_file = Some(file.clone());
             
-            // 自动设置输出文件名
-            let mut output_file = file.clone();
+            // 自动设置输出文件�?            let mut output_file = file.clone();
             let new_ext = if ext == "mo" { "po" } else { "mo" };
             output_file.set_extension(new_ext);
             new_operation.output_file = Some(output_file.clone());
             
-            // 添加到操作列表
-            self.state.operations.push(new_operation);
-            self.state.add_log(&format!("已添加新任务: {} → {}", 
+            // 添加到操作列�?            self.state.operations.push(new_operation);
+            self.state.add_log(&format!("已添加新任务: {} �?{}", 
                 file.display(), 
                 output_file.display()));
         } else {
-            self.state.add_log("文件选择已取消");
+            self.state.add_log("文件选择已取�?);
         }
     }
 
     fn render_mods(&mut self, ui: &mut Ui) {
-        // 获取主题强调色
-        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
+        // 获取主题强调�?        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
         
         // Top menu bar
         ui.horizontal(|ui| {
             if ui.selectable_label(self.state.show_mods_tab == ModsTab::Mods, 
-                           RichText::new("语言包").color(
+                           RichText::new("语言�?).color(
                                if self.state.show_mods_tab == ModsTab::Mods { accent_color } 
                                else { ui.style().visuals.text_color() }
                            )).clicked() {
@@ -623,24 +593,23 @@ impl App {
             if ui.button("+").clicked() {
                 // Add new profile
             }
-            if ui.button("≡").clicked() {
+            if ui.button("�?).clicked() {
                 // Show profile options
             }
 
-            // 添加"安装语言包"按钮，使用强调色
-            if ui.add(egui::Button::new(RichText::new("安装语言包(可多选)").color(accent_color))
-                .min_size(egui::vec2(150.0, 24.0)))
-                .clicked() {
+            // 添加"安装语言�?按钮，使用强调色
+            if ui.add(egui::Button::new(RichText::new("安装语言�?可多�?").color(accent_color))
+                     .min_size(egui::vec2(150.0, 24.0)))
+                     .clicked() {
                 self.install_new_mod();
             }
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 let enabled_count = self.state.installed_mods.iter().filter(|m| m.status == ModStatus::Enabled).count();
-                ui.label(format!("{} 语言包 / {} 已启用", self.state.installed_mods.len(), enabled_count));
+                ui.label(format!("{} 语言�?/ {} 已启�?, self.state.installed_mods.len(), enabled_count));
                 
                 // 添加"导出基础文件"按钮 - 放在合并按钮旁边
-                ui.add_space(5.0); // 增加一点间距
-                if ui.add(egui::Button::new(RichText::new("导出基础文件").color(Color32::LIGHT_GREEN))
+                ui.add_space(5.0); // 增加一点间�?                if ui.add(egui::Button::new(RichText::new("导出基础文件").color(Color32::LIGHT_GREEN))
                     .min_size(egui::vec2(110.0, 28.0)))
                     .on_hover_text("直接导出基础MO文件（不合并），从名称中移除base")
                     .clicked() {
@@ -649,10 +618,8 @@ impl App {
                 
                 // 当有启用的语言包时或需要重新合并时显示合并按钮
                 if enabled_count > 0 || self.state.needs_remerge {
-                    // 如果需要重新合并，显示"重新合并"按钮并使用不同颜色
-                    ui.push_id("remerge_button", |ui| {
-                        // 获取状态颜色
-                        let (_success_color, _warning_color, _error_color, _info_color) =
+                    // 如果需要重新合并，显示"重新合并"按钮并使用不同颜�?                    ui.push_id("remerge_button", |ui| {
+                        // 获取状态颜�?                        let (_success_color, _warning_color, _error_color, _info_color) =
                             crate::models::ThemeManager::get_status_colors();
                         
                         // 如果正在合并中，显示进度动画
@@ -669,10 +636,10 @@ impl App {
                                 RichText::new("应用到MO文件").color(Color32::LIGHT_BLUE)
                             };
                             
-                            let button = egui::Button::new(button_text)
+                            // 注意这里使用了正确的按钮构造方�?                            let merge_button = egui::Button::new(button_text)
                                 .min_size(egui::vec2(130.0, 28.0));
                                 
-                            if ui.add(button).clicked() {
+                            if ui.add(merge_button).clicked() {
                                 // 设置合并状态并启动线程
                                 self.state.is_merging = true;
                                 self.state.merge_progress = 0.0;
@@ -687,8 +654,7 @@ impl App {
                                 let ignore_main = self.state.ignore_main_mo_entries;
                                 
                                 self.thread_pool.spawn(move || {
-                                    // 通知开始
-                                    let _ = tx.send(MergeStatus::Started);
+                                    // 通知开�?                                    let _ = tx.send(MergeStatus::Started);
                                     
                                     // 创建缓存目录
                                     let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
@@ -702,8 +668,7 @@ impl App {
                                         return;
                                     }
                                     
-                                    // 缓存合并PO的路径
-                                    let cached_po_path = cache_dir.join("cached_merged.po");
+                                    // 缓存合并PO的路�?                                    let cached_po_path = cache_dir.join("cached_merged.po");
                                     
                                     // 更新进度 25%
                                     let _ = tx.send(MergeStatus::Progress(0.25));
@@ -732,9 +697,9 @@ impl App {
         // Table header
         ui.horizontal(|ui| {
             ui.add_space(30.0); // Checkbox column
-            ui.label("语言包名称").on_hover_text("按名称排序");
+            ui.label("语言包名�?).on_hover_text("按名称排�?);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.label("优先级 ▼").on_hover_text("数字越小优先级越高，优先级高的翻译将覆盖优先级低的翻译");
+                ui.label("优先�?�?).on_hover_text("数字越小优先级越高，优先级高的翻译将覆盖优先级低的翻�?);
                 ui.label("版本");
                 ui.label("类别");
             });
@@ -753,11 +718,8 @@ impl App {
         let mut to_disable = None;
         let mut to_uninstall = None;
 
-        // 拖放功能已移除
-        // 根据用户要求，已删除拖拽安装PO文件的功能
-
-        // 如果没有mods，显示一个提示区域
-        if self.state.installed_mods.is_empty() {
+        // 拖放功能已移�?        // 根据用户要求，已删除拖拽安装PO文件的功�?
+        // 如果没有mods，显示一个提示区�?        if self.state.installed_mods.is_empty() {
             let available_rect = ui.available_rect_before_wrap();
             let empty_area_rect = egui::Rect::from_min_size(
                 available_rect.min,
@@ -781,7 +743,7 @@ impl App {
             painter.text(
                 rect.center(),
                 egui::Align2::CENTER_CENTER,
-                "点击上方\"安装语言包\"按钮添加语言包",
+                "点击上方\"安装语言包\"按钮添加语言�?,
                 egui::TextStyle::Body.resolve(ui.style()),
                 Color32::from_rgb(180, 180, 180)
             );
@@ -798,10 +760,8 @@ impl App {
                                 // Checkbox for enabled/disabled
                                 let mut is_enabled = mod_info.status == ModStatus::Enabled;
                                 
-                                // 使用on_change来检测复选框状态变化
-                                if ui.checkbox(&mut is_enabled, "").changed() {
-                                    // 只有当状态确实发生变化时才添加到待处理队列
-                                    if is_enabled {
+                                // 使用on_change来检测复选框状态变�?                                if ui.checkbox(&mut is_enabled, "").changed() {
+                                    // 只有当状态确实发生变化时才添加到待处理队�?                                    if is_enabled {
                                         to_enable = Some(index);
                                     } else {
                                         to_disable = Some(index);
@@ -821,25 +781,19 @@ impl App {
                                     let can_move_down = index < self.state.installed_mods.len() - 1;
                                     let can_move_up = index > 0;
                                     
-                                    if ui.add_enabled(can_move_down, egui::Button::new("▼")).clicked() {
+                                    if ui.add_enabled(can_move_down, egui::Button::new("�?)).clicked() {
                                         // 下移
                                         move_down_index = Some(index);
                                     }
                                     
-                                    if ui.add_enabled(can_move_up, egui::Button::new("▲")).clicked() {
+                                    if ui.add_enabled(can_move_up, egui::Button::new("�?)).clicked() {
                                         // 上移
                                         move_up_index = Some(index);
                                     }
                                     
                                     ui.label(format!("{}", index)); // Priority
                                     ui.label(mod_info.version.as_deref().unwrap_or("1.0.0")); // Version
-                                    
-                                    // Display original file type if available, otherwise use description or default
-                                    if let Some(orig_type) = &mod_info.original_type {
-                                        ui.label(format!("从{}转换的PO文件", orig_type));
-                                    } else {
-                                        ui.label(mod_info.description.as_deref().unwrap_or("语言包")); // Category
-                                    }
+                                    ui.label(mod_info.description.as_deref().unwrap_or("语言�?)); // Category
                                 });
                             });
 
@@ -850,7 +804,7 @@ impl App {
 
                             // Context menu
                             row_response.response.context_menu(|ui| {
-                                if ui.button("重命名").clicked() {
+                                if ui.button("重命�?).clicked() {
                                     // 打开重命名对话框
                                     let mod_name = self.state.installed_mods[index].name.clone();
                                     self.state.rename_mod_index = Some(index);
@@ -868,8 +822,7 @@ impl App {
                         ui.separator();
                     }
                     
-                    // 处理优先级移动操作
-                    if let Some(index) = move_up_index {
+                    // 处理优先级移动操�?                    if let Some(index) = move_up_index {
                         if index > 0 {
                             self.state.installed_mods.swap(index, index - 1);
                             self.state.needs_remerge = true;
@@ -947,13 +900,12 @@ impl App {
         let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
             local_dir.join("BLMM").join("mods")
         } else {
-            // 如果无法获取系统本地数据目录，使用临时目录
-            std::env::temp_dir().join("BLMM").join("mods")
+            // 如果无法获取系统本地数据目录，使用临时目�?            std::env::temp_dir().join("BLMM").join("mods")
         };
         
         // 确保目录存在
         if let Err(e) = std::fs::create_dir_all(&cache_dir) {
-            eprintln!("创建语言包缓存目录失败: {}", e);
+            eprintln!("创建语言包缓存目录失�? {}", e);
             return None;
         }
         
@@ -963,9 +915,7 @@ impl App {
     // Generate the cached merged PO file from selected mods
     #[allow(dead_code)]
     fn generate_cached_merged_po(&mut self) {
-        // 该方法现在被线程化处理，这里不需要任何操作
-        // 所有逻辑都移到了点击事件和process_merge_status方法中
-    }
+        // 该方法现在被线程化处理，这里不需要任何操�?        // 所有逻辑都移到了点击事件和process_merge_status方法�?    }
 
     // Apply the cached merged PO file to the main MO file
     fn apply_merged_po_to_mo(&mut self) {
@@ -976,7 +926,7 @@ impl App {
         }
         
         if self.state.cached_merged_po.is_none() {
-            self.state.add_log("错误: 没有可用的合并PO缓存，请先点击'合并选中PO'");
+            self.state.add_log("错误: 没有可用的合并PO缓存，请先点�?合并选中PO'");
             return;
         }
         
@@ -987,8 +937,7 @@ impl App {
         let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
             local_dir.join("BLMM").join("cache")
         } else {
-            // 如果无法获取系统本地数据目录，使用临时目录
-            std::env::temp_dir().join("BLMM").join("cache")
+            // 如果无法获取系统本地数据目录，使用临时目�?            std::env::temp_dir().join("BLMM").join("cache")
         };
         
         // 确保缓存目录存在
@@ -997,26 +946,20 @@ impl App {
             return;
         }
         
-        // Create output MO file path - 使用用户设置的输出目录或桌面上的"BLMM导出"文件夹
-        let output_mo_path = if let Some(output_dir) = &self.state.output_directory {
-            // 使用用户设置的输出目录
-            if let Err(e) = std::fs::create_dir_all(output_dir) {
+        // Create output MO file path - 使用用户设置的输出目录或桌面上的"BLMM导出"文件�?        let output_mo_path = if let Some(output_dir) = &self.state.output_directory {
+            // 使用用户设置的输出目�?            if let Err(e) = std::fs::create_dir_all(output_dir) {
                 self.state.add_log(&format!("创建输出目录失败: {}", e));
-                // 如果创建目录失败，回退到桌面上的"BLMM导出"文件夹
-                self.create_default_output_directory()
+                // 如果创建目录失败，回退到桌面上�?BLMM导出"文件�?                self.create_default_output_directory()
                     .map(|dir| dir.join("blender.mo"))
                     .unwrap_or_else(|| cache_dir.join("blender.mo"))
             } else {
-                // 使用设置的输出目录
-                output_dir.join("blender.mo")
+                // 使用设置的输出目�?                output_dir.join("blender.mo")
             }
         } else {
-            // 未设置输出目录，使用桌面上的"BLMM导出"文件夹
-            self.create_default_output_directory()
+            // 未设置输出目录，使用桌面上的"BLMM导出"文件�?            self.create_default_output_directory()
                 .map(|dir| dir.join("blender.mo"))
                 .unwrap_or_else(|| {
-                    // 如果创建桌面文件夹失败，回退到主MO文件所在目录
-                    if let Some(parent) = main_mo_file.parent() {
+                    // 如果创建桌面文件夹失败，回退到主MO文件所在目�?                    if let Some(parent) = main_mo_file.parent() {
                         parent.join("blender.mo")
                     } else {
                         cache_dir.join("blender.mo")
@@ -1038,7 +981,7 @@ impl App {
                 
                 // 记录是否使用了忽略主mo条目的选项
                 let ignore_msg = if self.state.ignore_main_mo_entries {
-                    "（已启用忽略主MO条目模式）"
+                    "（已启用忽略主MO条目模式�?
                 } else {
                     ""
                 };
@@ -1084,7 +1027,7 @@ impl App {
         // 尝试创建目录
         match std::fs::create_dir_all(&default_output_dir) {
             Ok(_) => {
-                self.state.add_log(&format!("已创建默认输出目录: {}", default_output_dir.to_string_lossy()));
+                self.state.add_log(&format!("已创建默认输出目�? {}", default_output_dir.to_string_lossy()));
                 Some(default_output_dir)
             },
             Err(e) => {
@@ -1138,21 +1081,21 @@ impl App {
     }
 
     fn render_package_tab(&mut self, ui: &mut Ui) {
-        ui.heading("语言包管理");
+        ui.heading("语言包管�?);
         
         ui.horizontal(|ui| {
-            if ui.button("浏览可用语言包").clicked() {
+            if ui.button("浏览可用语言�?).clicked() {
                 // This would connect to a repository or show local packages
             }
             
-            if ui.button("更新语言包列表").clicked() {
+            if ui.button("更新语言包列�?).clicked() {
                 // This would refresh available packages
             }
         });
         
         ui.separator();
         
-        ui.label("没有可用的语言包。请更新语言包列表或检查网络连接。");
+        ui.label("没有可用的语言包。请更新语言包列表或检查网络连接�?);
     }
 
     fn render_mod_settings(&mut self, ui: &mut Ui) {
@@ -1161,8 +1104,7 @@ impl App {
         
         ui.heading(RichText::new("设置").color(accent_color));
         
-        // 保存原始配置值，以检测更改
-        let orig_main_mo_file = self.state.main_mo_file.clone();
+        // 保存原始配置值，以检测更�?        let orig_main_mo_file = self.state.main_mo_file.clone();
         let orig_dark_mode = self.state.dark_mode;
         let orig_auto_batch = self.state.auto_batch;
         let orig_auto_close = self.state.auto_close;
@@ -1180,16 +1122,14 @@ impl App {
                     // 设置按钮样式
                     let mut button = egui::Button::new(name);
                     
-                    // 根据主题类型设置不同的按钮颜色
-                    if self.config.theme == theme {
+                    // 根据主题类型设置不同的按钮颜�?                    if self.config.theme == theme {
                         button = button.fill(crate::models::ThemeManager::get_accent_color(&theme));
                     }
                     
-                    // 添加按钮并处理点击事件
-                    if ui.add(button).clicked() {
+                    // 添加按钮并处理点击事�?                    if ui.add(button).clicked() {
                         self.config.theme = theme.clone();
-                        self.state.dark_mode = theme != crate::models::AppTheme::Light 
-                            && theme != crate::models::AppTheme::Sepia;
+                        self.state.dark_mode = self.config.theme != crate::models::AppTheme::Light 
+                            && self.config.theme != crate::models::AppTheme::Sepia;
                     }
                 }
             });
@@ -1204,14 +1144,12 @@ impl App {
             ui.label("主MO文件:");
             
             if let Some(mo_file) = &self.state.main_mo_file {
-                // 显示文件名
-                let file_name = mo_file.file_name()
+                // 显示文件�?                let file_name = mo_file.file_name()
                     .map(|f| f.to_string_lossy().to_string())
                     .unwrap_or_else(|| mo_file.display().to_string());
                 let response = ui.label(file_name);
                 
-                // 悬停时显示完整路径
-                let full_path = mo_file.to_string_lossy().to_string();
+                // 悬停时显示完整路�?                let full_path = mo_file.to_string_lossy().to_string();
                 response.on_hover_text(full_path);
             } else {
                 ui.label("[未设置]");
@@ -1227,15 +1165,11 @@ impl App {
                     self.state.main_mo_file = Some(mo_path.clone());
                     self.config.main_mo_file = Some(mo_path.clone());
                     
-                    // 清除合并缓存，因为主MO文件已更改
-                    self.state.cached_merged_po = None;
+                    // 清除合并缓存，因为主MO文件已更�?                    self.state.cached_merged_po = None;
                     self.state.needs_remerge = true;
                     
                     // 添加日志
                     self.state.add_log(&format!("已设置主MO文件: {}", mo_path.display()));
-                    
-                    // 将文件克隆到BLMM文件夹
-                    self.clone_main_mo_to_blmm(&mo_path);
                 }
             }
             
@@ -1247,8 +1181,7 @@ impl App {
                 self.state.main_mo_file = None;
                 self.config.main_mo_file = None;
                 
-                // 清除合并缓存，因为主MO文件已更改
-                self.state.cached_merged_po = None;
+                // 清除合并缓存，因为主MO文件已更�?                self.state.cached_merged_po = None;
                 self.state.needs_remerge = true;
                 
                 self.state.add_log("已清除主MO文件设置");
@@ -1266,7 +1199,7 @@ impl App {
         ui.add_space(4.0);
         
         ui.horizontal(|ui| {
-            ui.label("主MO文件描述:").on_hover_text("主MO文件是Blender的原始翻译文件，通常位于Blender安装目录的'datafiles/locale/zh_CN/LC_MESSAGES/'下，名为'blender.mo'");
+            ui.label("主MO文件描述:").on_hover_text("主MO文件是Blender的原始翻译文件，通常位于Blender安装目录�?datafiles/locale/zh_CN/LC_MESSAGES/'下，名为'blender.mo'");
         });
         
         ui.separator();
@@ -1278,15 +1211,13 @@ impl App {
             ui.label("输出目录:");
             
             if let Some(output_dir) = &self.state.output_directory {
-                // 显示目录名
-                let dir_name = output_dir.display().to_string();
+                // 显示目录�?                let dir_name = output_dir.display().to_string();
                 let response = ui.label(dir_name);
                 
-                // 悬停时显示完整路径
-                let full_path = output_dir.to_string_lossy().to_string();
+                // 悬停时显示完整路�?                let full_path = output_dir.to_string_lossy().to_string();
                 response.on_hover_text(full_path);
             } else {
-                ui.label("[未设置 - 将使用桌面上的\"BLMM导出\"文件夹]");
+                ui.label("[未设�?- 将使用桌面上的\"BLMM导出\"文件夹]");
             }
             
             if ui.button("选择输出目录").clicked() {
@@ -1295,20 +1226,20 @@ impl App {
                     .pick_folder() {
                         self.state.output_directory = Some(dir.clone());
                         self.config.output_directory = Some(dir.clone());
-                        self.state.add_log(&format!("已设置输出目录: {}", dir.display()));
+                        self.state.add_log(&format!("已设置输出目�? {}", dir.display()));
                     }
             }
             
             if ui.button("清除").clicked() {
                 self.state.output_directory = None;
                 self.config.output_directory = None;
-                self.state.add_log("已清除输出目录设置，将使用桌面上的\"BLMM导出\"文件夹");
+                self.state.add_log("已清除输出目录设置，将使用桌面上的\"BLMM导出\"文件�?);
             }
         });
         
         // 添加默认输出目录说明
         ui.add_space(4.0);
-        ui.label("提示: 未设置输出目录时，将默认在桌面上创建\"BLMM导出\"文件夹，并将合并后的MO文件保存到此处。");
+        ui.label("提示: 未设置输出目录时，将默认在桌面上创建\"BLMM导出\"文件夹，并将合并后的MO文件保存到此处�?);
         
         ui.separator();
         
@@ -1316,8 +1247,8 @@ impl App {
         ui.heading("常用设置");
         
         ui.horizontal(|ui| {
-            ui.checkbox(&mut self.state.auto_batch, "自动批处理");
-            ui.checkbox(&mut self.state.auto_close, "处理完成后关闭");
+            ui.checkbox(&mut self.state.auto_batch, "自动批处�?);
+            ui.checkbox(&mut self.state.auto_close, "处理完成后关�?);
         });
         
         ui.checkbox(&mut self.state.show_logs, "显示日志窗口");
@@ -1329,20 +1260,18 @@ impl App {
                 .on_hover_text("启用后，语言包中与主MO文件重复的条目将被忽略，保留主MO文件中的原始翻译");
             
             ui.horizontal(|ui| {
-                ui.label(format!("线程池: {} 线程", num_cpus::get()));
+                ui.label(format!("线程�? {} 线程", num_cpus::get()));
             });
         });
         
-        // 检查配置是否有变更，如果有则保存
-        if orig_main_mo_file != self.state.main_mo_file ||
+        // 检查配置是否有变更，如果有则保�?        if orig_main_mo_file != self.state.main_mo_file ||
            orig_dark_mode != self.state.dark_mode ||
            orig_auto_batch != self.state.auto_batch ||
            orig_auto_close != self.state.auto_close ||
            orig_show_logs != self.state.show_logs ||
            orig_ignore_main_mo_entries != self.state.ignore_main_mo_entries ||
            orig_theme != self.config.theme {
-            // 保存设置到配置文件
-            self.config.main_mo_file = self.state.main_mo_file.clone();
+            // 保存设置到配置文�?            self.config.main_mo_file = self.state.main_mo_file.clone();
             self.config.dark_mode = self.state.dark_mode;
             self.config.auto_batch = self.state.auto_batch;
             self.config.auto_close = self.state.auto_close;
@@ -1355,12 +1284,11 @@ impl App {
         }
     }
 
-    // 安装新语言包
-    fn install_new_mod(&mut self) {
+    // 安装新语言�?    fn install_new_mod(&mut self) {
         // 获取或创建MOD缓存目录
         let mods_dir = self.get_or_create_mods_cache_dir();
         if mods_dir.is_none() {
-            self.state.add_log("错误: 无法创建语言包缓存目录");
+            self.state.add_log("错误: 无法创建语言包缓存目�?);
             return;
         }
         
@@ -1379,10 +1307,9 @@ impl App {
             .pick_files() {
                 
             let files_count = files.len();
-            self.state.add_log(&format!("选择了 {} 个翻译文件准备安装", files_count));
+            self.state.add_log(&format!("选择�?{} 个翻译文件准备安�?, files_count));
             
-            // 记录成功安装的文件数量
-            let mut success_count = 0;
+            // 记录成功安装的文件数�?            let mut success_count = 0;
             
             // 创建临时缓存目录用于CSV转换
             let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
@@ -1397,8 +1324,7 @@ impl App {
                 return;
             }
             
-            // 处理每一个选择的文件
-            for file in files {
+            // 处理每一个选择的文�?            for file in files {
                 // 确定文件类型
                 let file_ext = file.extension().unwrap_or_default().to_string_lossy().to_lowercase();
                 
@@ -1420,8 +1346,7 @@ impl App {
                         },
                         Err(e) => {
                             self.state.add_log(&format!("CSV转换为PO失败: {}", e));
-                            continue;  // 跳过此文件
-                        }
+                            continue;  // 跳过此文�?                        }
                     }
                 } else {
                     file.clone()
@@ -1431,13 +1356,12 @@ impl App {
                 let orig_file_name = file.file_name().unwrap_or_default().to_string_lossy().to_string();
                 let mut file_name = processed_file.file_name().unwrap_or_default().to_string_lossy().to_string();
                 
-                // 如果是从CSV转换的PO，给文件名加上标记
-                if file_ext == "csv" {
+                // 如果是从CSV转换的PO，给文件名加上标�?                if file_ext == "csv" {
                     let stem = orig_file_name.strip_suffix(".csv").unwrap_or(&orig_file_name);
                     file_name = format!("{}_from_csv.po", stem);
                 }
                 
-                // 检查是否已存在同名语言包，如果存在则添加"new"后缀
+                // 检查是否已存在同名语言包，如果存在则添�?new"后缀
                 let mut counter = 0;
                 let original_name = file_name.clone();
                 let stem = if let Some(pos) = original_name.rfind('.') {
@@ -1463,13 +1387,10 @@ impl App {
                 
                 let mut mod_info = ModInfo::default();
                 mod_info.name = file_name.clone();
-                mod_info.status = ModStatus::Enabled; // 默认为启用状态
-                mod_info.install_date = Some(Local::now());
+                mod_info.status = ModStatus::Enabled; // 默认为启用状�?                mod_info.install_date = Some(Local::now());
                 
-                // 如果来自CSV，添加描述
-                if file_ext == "csv" {
+                // 如果来自CSV，添加描�?                if file_ext == "csv" {
                     mod_info.description = Some("从CSV转换的PO文件".to_string());
-                    mod_info.original_type = Some("CSV".to_string());
                 }
                 
                 // 将PO文件复制到MOD目录
@@ -1478,55 +1399,34 @@ impl App {
                 // 尝试复制文件
                 match std::fs::copy(&processed_file, &target_path) {
                     Ok(_) => {
-                        mod_info.path = target_path.clone();
+                        mod_info.path = target_path;
                         
-                        // 在配置中保存该mod的启用状态
-                        self.config.saved_mods.insert(file_name.clone(), true);
-                        
-                        // 如果存在原始文件类型信息，创建元数据JSON文件
-                        if let Some(orig_type) = &mod_info.original_type {
-                            let metadata_path = target_path.with_extension("json");
-                            let metadata = serde_json::json!({
-                                "name": file_name,
-                                "original_type": orig_type,
-                                "install_date": chrono::Local::now().to_rfc3339()
-                            });
-                            
-                            // 将元数据写入JSON文件
-                            if let Ok(json_str) = serde_json::to_string_pretty(&metadata) {
-                                if let Err(e) = std::fs::write(&metadata_path, json_str) {
-                                    self.state.add_log(&format!("无法写入元数据文件: {}", e));
-                                }
-                            }
-                        }
+                        // 在配置中保存该mod的启用状�?                        self.config.saved_mods.insert(file_name.clone(), true);
                         
                         self.state.installed_mods.push(mod_info);
                         
-                        // 标记需要重新合并
-                        self.state.needs_remerge = true;
+                        // 标记需要重新合�?                        self.state.needs_remerge = true;
                         
-                        // 如果文件名被修改，添加相应日志
-                        if file_name != original_name {
-                            self.state.add_log(&format!("检测到同名语言包，已重命名为: {}", file_name));
+                        // 如果文件名被修改，添加相应日�?                        if file_name != original_name {
+                            self.state.add_log(&format!("检测到同名语言包，已重命名�? {}", file_name));
                         }
                         
                         // 显示成功信息，区分CSV和PO
                         if file_ext == "csv" {
-                            self.state.add_log(&format!("成功将CSV文件转换并安装为语言包: {}", file_name));
+                            self.state.add_log(&format!("成功将CSV文件转换并安装为语言�? {}", file_name));
                         } else {
-                            self.state.add_log(&format!("成功安装语言包: {}", file_name));
+                            self.state.add_log(&format!("成功安装语言�? {}", file_name));
                         }
                         
                         success_count += 1;
                         
-                        // 如果是临时文件，安装后删除
-                        if file_ext == "csv" {
+                        // 如果是临时文件，安装后删�?                        if file_ext == "csv" {
                             let _ = std::fs::remove_file(&processed_file);
                         }
                     },
                     Err(e) => {
                         let file_display = file.file_name().unwrap_or_default().to_string_lossy();
-                        self.state.add_log(&format!("语言包 {} 安装失败: {}", file_display, e));
+                        self.state.add_log(&format!("语言�?{} 安装失败: {}", file_display, e));
                         
                         // 如果是临时文件，安装失败也要删除
                         if file_ext == "csv" {
@@ -1536,14 +1436,12 @@ impl App {
                 }
             }
             
-            // 安装完成后更新配置并显示汇总信息
-            if success_count > 0 {
+            // 安装完成后更新配置并显示汇总信�?            if success_count > 0 {
                 // 保存配置
                 self.config.save().ok();
                 
-                // 如果安装了多个文件，显示汇总信息
-                if files_count > 1 {
-                    self.state.add_log(&format!("批量安装完成：成功 {}/{}个语言包", success_count, files_count));
+                // 如果安装了多个文件，显示汇总信�?                if files_count > 1 {
+                    self.state.add_log(&format!("批量安装完成：成�?{}/{}个语言�?, success_count, files_count));
                 }
             }
         }
@@ -1554,7 +1452,7 @@ impl App {
         // 获取或创建MOD缓存目录
         let mods_dir = self.get_or_create_mods_cache_dir();
         if mods_dir.is_none() {
-            self.state.add_log("错误: 无法创建语言包缓存目录");
+            self.state.add_log("错误: 无法创建语言包缓存目�?);
             return;
         }
         
@@ -1584,34 +1482,16 @@ impl App {
                             let file_name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
                             let mut mod_info = ModInfo::default();
                             mod_info.name = file_name.clone();
-                            mod_info.path = path.clone();
+                            mod_info.path = path;
                             
-                            // 尝试读取同名的json元数据文件
-                            let metadata_path = path.with_extension("json");
-                            if metadata_path.exists() {
-                                if let Ok(meta_content) = std::fs::read_to_string(&metadata_path) {
-                                    if let Ok(json) = serde_json::from_str::<serde_json::Value>(&meta_content) {
-                                        // 尝试获取原始文件类型
-                                        if let Some(orig_type) = json.get("original_type").and_then(|v| v.as_str()) {
-                                            mod_info.original_type = Some(orig_type.to_string());
-                                            if orig_type == "CSV" {
-                                                mod_info.description = Some("从CSV转换的PO文件".to_string());
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // 从配置中加载该mod的启用状态
-                            if let Some(enabled) = self.config.saved_mods.get(&file_name) {
+                            // 从配置中加载该mod的启用状�?                            if let Some(enabled) = self.config.saved_mods.get(&file_name) {
                                 mod_info.status = if *enabled {
                                     ModStatus::Enabled
                                 } else {
                                     ModStatus::Disabled
                                 };
                             } else {
-                                // 如果没有保存的状态，默认为启用
-                                mod_info.status = ModStatus::Enabled;
+                                // 如果没有保存的状态，默认为启�?                                mod_info.status = ModStatus::Enabled;
                             }
                             
                             // 获取文件信息
@@ -1631,16 +1511,16 @@ impl App {
                 }
                 
                 if found {
-                    self.state.add_log(&format!("扫描完成，发现 {} 个语言包", self.state.installed_mods.len()));
+                    self.state.add_log(&format!("扫描完成，发�?{} 个语言�?, self.state.installed_mods.len()));
                 } else {
-                    self.state.add_log("未在目录中找到任何PO语言包");
+                    self.state.add_log("未在目录中找到任何PO语言�?);
                 }
                 
                 // 保存配置
                 self.config.save().ok();
             },
             Err(e) => {
-                self.state.add_log(&format!("扫描语言包目录失败: {}", e));
+                self.state.add_log(&format!("扫描语言包目录失�? {}", e));
             }
         }
     }
@@ -1651,14 +1531,12 @@ impl App {
             self.state.installed_mods[index].status = ModStatus::Enabled;
             let mod_name = &self.state.installed_mods[index].name;
             
-            // 在配置中保存该mod的启用状态
-            self.config.saved_mods.insert(mod_name.clone(), true);
+            // 在配置中保存该mod的启用状�?            self.config.saved_mods.insert(mod_name.clone(), true);
             self.config.save().ok();
             
-            // 标记需要重新合并
-            self.state.needs_remerge = true;
+            // 标记需要重新合�?            self.state.needs_remerge = true;
             
-            self.state.add_log(&format!("已启用语言包: {}", mod_name));
+            self.state.add_log(&format!("已启用语言�? {}", mod_name));
         }
     }
     
@@ -1668,14 +1546,12 @@ impl App {
             self.state.installed_mods[index].status = ModStatus::Disabled;
             let mod_name = &self.state.installed_mods[index].name;
             
-            // 在配置中保存该mod的禁用状态
-            self.config.saved_mods.insert(mod_name.clone(), false);
+            // 在配置中保存该mod的禁用状�?            self.config.saved_mods.insert(mod_name.clone(), false);
             self.config.save().ok();
             
-            // 标记需要重新合并
-            self.state.needs_remerge = true;
+            // 标记需要重新合�?            self.state.needs_remerge = true;
             
-            self.state.add_log(&format!("已禁用语言包: {}", mod_name));
+            self.state.add_log(&format!("已禁用语言�? {}", mod_name));
         }
     }
     
@@ -1688,19 +1564,17 @@ impl App {
             // 尝试删除文件
             match std::fs::remove_file(&mod_info.path) {
                 Ok(_) => {
-                    // 从配置中移除该mod的状态记录
-                    self.config.saved_mods.remove(&mod_name);
+                    // 从配置中移除该mod的状态记�?                    self.config.saved_mods.remove(&mod_name);
                     self.config.save().ok();
                     
                     self.state.installed_mods.remove(index);
                     
-                    // 标记需要重新合并
-                    self.state.needs_remerge = true;
+                    // 标记需要重新合�?                    self.state.needs_remerge = true;
                     
-                    self.state.add_log(&format!("已卸载语言包: {}", mod_name));
+                    self.state.add_log(&format!("已卸载语言�? {}", mod_name));
                 },
                 Err(e) => {
-                    self.state.add_log(&format!("卸载语言包失败: {}", e));
+                    self.state.add_log(&format!("卸载语言包失�? {}", e));
                 }
             }
         }
@@ -1708,8 +1582,7 @@ impl App {
 
     // 应用退出时保存配置
     fn save_config_on_exit(&mut self) {
-        // 确保配置对象包含最新的状态
-        self.config.main_mo_file = self.state.main_mo_file.clone();
+        // 确保配置对象包含最新的状�?        self.config.main_mo_file = self.state.main_mo_file.clone();
         self.config.mods_directory = self.state.mods_directory.clone();
         self.config.output_directory = self.state.output_directory.clone();
         
@@ -1725,7 +1598,7 @@ impl App {
         if let Err(e) = self.config.save() {
             self.state.add_log(&format!("退出时保存配置失败: {}", e));
         } else {
-            self.state.add_log("配置已保存");
+            self.state.add_log("配置已保�?);
         }
     }
 
@@ -1737,8 +1610,7 @@ impl App {
         let blmm_dir = if let Some(local_dir) = dirs::data_local_dir() {
             local_dir.join("BLMM")
         } else {
-            // 如果无法获取系统本地数据目录，使用临时目录
-            std::env::temp_dir().join("BLMM")
+            // 如果无法获取系统本地数据目录，使用临时目�?            std::env::temp_dir().join("BLMM")
         };
 
         // 确保目录存在
@@ -1747,9 +1619,7 @@ impl App {
             return None;
         }
 
-        // 为MO文件创建一个新的路径
-        // 不再需要原始文件名，直接使用固定名称
-        let blmm_mo_path = blmm_dir.join("base_blender.mo");
+        // 为MO文件创建一个新的路�?        // 不再需要原始文件名，直接使用固定名�?        let blmm_mo_path = blmm_dir.join("base_blender.mo");
 
         // 复制文件
         match fs::copy(original_mo_path, &blmm_mo_path) {
@@ -1764,15 +1634,12 @@ impl App {
         }
     }
 
-    // 在process_conversion_results方法后添加新的方法处理合并进度
-    fn process_merge_status(&mut self) {
-        // 更新动画计数器
-        if self.state.is_merging {
+    // 在process_conversion_results方法后添加新的方法处理合并进�?    fn process_merge_status(&mut self) {
+        // 更新动画计数�?        if self.state.is_merging {
             self.state.merge_progress_anim += 1;
         }
         
-        // 检查是否有来自合并线程的消息
-        if let Ok(status) = self.merge_rx.try_recv() {
+        // 检查是否有来自合并线程的消�?        if let Ok(status) = self.merge_rx.try_recv() {
             match status {
                 MergeStatus::Started => {
                     self.state.add_log("开始合并PO文件...");
@@ -1802,50 +1669,49 @@ impl App {
         }
     }
 
-    // 专门用于显示帮助信息的函数
-    fn show_help_window(&mut self, ctx: &egui::Context) {
+    // 专门用于显示帮助信息的函�?    fn show_help_window(&mut self, ctx: &egui::Context) {
         if self.state.show_help {
             egui::Window::new("使用帮助")
                 .collapsible(false)
                 .min_width(500.0)
                 .show(ctx, |ui| {
-                    ui.heading("Blender字典合并管理器 By:凌川雪");
+                    ui.heading("Blender字典合并管理�?By:凌川�?);
                     ui.label("使用帮助");
                     ui.separator();
                     
                     ui.collapsing("基本使用流程", |ui| {
                         ui.add_space(5.0);
                         
-                        ui.label("1. 设置 - 选择主MO文件和语言包目录");
+                        ui.label("1. 设置 - 选择主MO文件和语言包目�?);
                         ui.label("   - 进入设置选项卡，设置Blender的主MO文件");
                         ui.label("   - 设置存放PO语言包的目录");
                         ui.add_space(5.0);
                         
-                        ui.label("2. 安装语言包");
+                        ui.label("2. 安装语言�?);
                         ui.label("   - 点击「安装语言包」按钮选择PO文件");
                         ui.label("   - 安装后语言包会自动启用");
                         ui.add_space(5.0);
                         
-                        ui.label("3. 管理语言包");
-                        ui.label("   - 勾选/取消勾选语言包以启用/禁用");
+                        ui.label("3. 管理语言�?);
+                        ui.label("   - 勾�?取消勾选语言包以启用/禁用");
                         ui.label("   - 使用▲▼按钮调整语言包优先级");
-                        ui.label("   - 优先级高的语言包翻译会覆盖优先级低的翻译");
+                        ui.label("   - 优先级高的语言包翻译会覆盖优先级低的翻�?);
                         ui.add_space(5.0);
                         
                         ui.label("4. 应用更改");
-                        ui.label("   - 修改语言包状态后点击「重新合并」按钮");
+                        ui.label("   - 修改语言包状态后点击「重新合并」按�?);
                         ui.label("   - 等待处理完成后，将自动应用到MO文件");
                     });
                     
                     ui.collapsing("高级选项", |ui| {
                         ui.label("- 在设置中可启用「忽略主mo合并」选项，保留原始MO翻译");
-                        ui.label("- 通过上下移动语言包调整优先级，高优先级的语言包翻译会覆盖低优先级的");
+                        ui.label("- 通过上下移动语言包调整优先级，高优先级的语言包翻译会覆盖低优先级�?);
                         ui.label("- 应用到MO文件后，需要重启Blender才能看到更改效果");
                     });
                     
                     ui.collapsing("故障排除", |ui| {
                         ui.label("如果合并失败:");
-                        ui.label("1. 检查主MO文件是否可读写");
+                        ui.label("1. 检查主MO文件是否可读�?);
                         ui.label("2. 确保语言包是标准的PO格式");
                         ui.label("3. 在日志区查看详细错误信息");
                         ui.label("4. 尝试启用或禁用「忽略主mo合并」选项");
@@ -1863,11 +1729,11 @@ impl App {
     // 重命名对话框
     fn render_rename_dialog(&mut self, ctx: &egui::Context) {
         if self.state.rename_mod_index.is_some() {
-            egui::Window::new("重命名语言包")
+            egui::Window::new("重命名语言�?)
                 .collapsible(false)
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label("新名称:");
+                        ui.label("新名�?");
                         ui.text_edit_singleline(&mut self.state.rename_mod_name);
                     });
                     
@@ -1887,17 +1753,15 @@ impl App {
         }
     }
     
-    // 重命名语言包
-    fn rename_mod(&mut self, index: usize, new_name: String) {
+    // 重命名语言�?    fn rename_mod(&mut self, index: usize, new_name: String) {
         if index >= self.state.installed_mods.len() || new_name.trim().is_empty() {
             return;
         }
         
-        // 获取语言包目录
-        let mods_dir = match self.get_or_create_mods_cache_dir() {
+        // 获取语言包目�?        let mods_dir = match self.get_or_create_mods_cache_dir() {
             Some(dir) => dir,
             None => {
-                self.state.add_log("错误: 无法获取语言包目录");
+                self.state.add_log("错误: 无法获取语言包目�?);
                 return;
             }
         };
@@ -1906,12 +1770,11 @@ impl App {
         let old_name = mod_info.name.clone();
         let old_path = mod_info.path.clone();
         
-        // 如果新名称与旧名称相同，则不做任何操作
-        if old_name == new_name {
+        // 如果新名称与旧名称相同，则不做任何操�?        if old_name == new_name {
             return;
         }
         
-        // 确保新文件名以.po结尾
+        // 确保新文件名�?po结尾
         let new_name_with_ext = if new_name.to_lowercase().ends_with(".po") {
             new_name
         } else {
@@ -1920,15 +1783,13 @@ impl App {
         
         let new_path = mods_dir.join(&new_name_with_ext);
         
-        // 尝试重命名文件
-        match std::fs::rename(&old_path, &new_path) {
+        // 尝试重命名文�?        match std::fs::rename(&old_path, &new_path) {
             Ok(_) => {
                 // 更新模组信息
                 mod_info.name = new_name_with_ext.clone();
                 mod_info.path = new_path;
                 
-                // 更新配置中的状态记录
-                if let Some(is_enabled) = self.config.saved_mods.remove(&old_name) {
+                // 更新配置中的状态记�?                if let Some(is_enabled) = self.config.saved_mods.remove(&old_name) {
                     self.config.saved_mods.insert(new_name_with_ext.clone(), is_enabled);
                 }
                 
@@ -1937,8 +1798,7 @@ impl App {
                 
                 self.state.add_log(&format!("语言包重命名成功: {} -> {}", old_name, new_name_with_ext));
                 
-                // 标记需要重新合并
-                self.state.needs_remerge = true;
+                // 标记需要重新合�?                self.state.needs_remerge = true;
             },
             Err(e) => {
                 self.state.add_log(&format!("语言包重命名失败: {}", e));
@@ -1957,8 +1817,7 @@ impl App {
             "C:/Program Files (x86)/Blender Foundation",
         ];
         
-        // 首先让用户选择Blender主目录
-        let selected_blender_dir = rfd::FileDialog::new()
+        // 首先让用户选择Blender主目�?        let selected_blender_dir = rfd::FileDialog::new()
             .set_title("选择Blender安装目录")
             .set_directory(common_paths[0])
             .pick_folder();
@@ -1970,8 +1829,7 @@ impl App {
                           |name| name.to_string_lossy().to_string());
             self.state.add_log(&format!("选择了Blender目录: {}", dir_name));
             
-            // 在选定目录中查找版本目录（如Blender 4.3）
-            let mut version_dirs = Vec::new();
+            // 在选定目录中查找版本目录（如Blender 4.3�?            let mut version_dirs = Vec::new();
             if let Ok(entries) = std::fs::read_dir(&blender_dir) {
                 for entry in entries.filter_map(|e| e.ok()) {
                     let path = entry.path();
@@ -1999,14 +1857,13 @@ impl App {
                     // 让用户从对话框中选择版本
                     let selected_result = rfd::MessageDialog::new()
                         .set_title("选择Blender版本")
-                        .set_description(&format!("找到多个Blender版本，请选择一个:\n{}", 
+                        .set_description(&format!("找到多个Blender版本，请选择一�?\n{}", 
                             version_dir_names.join("\n")))
                         .set_buttons(rfd::MessageButtons::OkCancel)
                         .show();
                         
                     if selected_result {
-                        // 如果用户点击确定，让他们选择具体的版本目录
-                        rfd::FileDialog::new()
+                        // 如果用户点击确定，让他们选择具体的版本目�?                        rfd::FileDialog::new()
                             .set_title("选择Blender版本目录")
                             .set_directory(&blender_dir)
                             .pick_folder()
@@ -2015,37 +1872,31 @@ impl App {
                     }
                 }
             } else {
-                // 没有找到标准的版本目录，直接使用所选目录
-                Some(blender_dir)
+                // 没有找到标准的版本目录，直接使用所选目�?                Some(blender_dir)
             };
             
-            // 如果选择了版本目录，继续查找子版本目录（如4.3）
-            if let Some(version_dir) = selected_version_dir {
-                self.state.add_log(&format!("选择的版本目录: {}", version_dir.display()));
+            // 如果选择了版本目录，继续查找子版本目录（�?.3�?            if let Some(version_dir) = selected_version_dir {
+                self.state.add_log(&format!("选择的版本目�? {}", version_dir.display()));
                 
-                // 在版本目录中查找子版本目录（如4.3）
-                let mut subversion_dirs = Vec::new();
+                // 在版本目录中查找子版本目录（�?.3�?                let mut subversion_dirs = Vec::new();
                 if let Ok(entries) = std::fs::read_dir(&version_dir) {
                     for entry in entries.filter_map(|e| e.ok()) {
                         let path = entry.path();
                         if path.is_dir() {
                             let dir_name = path.file_name().unwrap_or_default().to_string_lossy();
-                            // 检查是否为版本号格式（如4.3）
-                            if dir_name.chars().any(|c| c.is_digit(10)) && dir_name.contains('.') {
+                            // 检查是否为版本号格式（�?.3�?                            if dir_name.chars().any(|c| c.is_digit(10)) && dir_name.contains('.') {
                                 subversion_dirs.push(path.clone());
-                                self.state.add_log(&format!("找到子版本目录: {}", dir_name));
+                                self.state.add_log(&format!("找到子版本目�? {}", dir_name));
                             }
                         }
                     }
                 }
                 
-                // 选择要使用的子版本目录
-                let target_dir = if !subversion_dirs.is_empty() {
-                    // 如果只有一个子版本目录，询问用户是否使用
-                    if subversion_dirs.len() == 1 {
+                // 选择要使用的子版本目�?                let target_dir = if !subversion_dirs.is_empty() {
+                    // 如果只有一个子版本目录，询问用户是否使�?                    if subversion_dirs.len() == 1 {
                         let result = rfd::MessageDialog::new()
-                            .set_title("确认子版本目录")
-                            .set_description(&format!("是否使用子版本目录: {}?", 
+                            .set_title("确认子版本目�?)
+                            .set_description(&format!("是否使用子版本目�? {}?", 
                                 subversion_dirs[0].file_name().unwrap_or_default().to_string_lossy()))
                             .set_buttons(rfd::MessageButtons::YesNo)
                             .show();
@@ -2058,7 +1909,7 @@ impl App {
                     } else {
                         // 让用户从多个子版本目录中选择
                         let selected_subversion = rfd::FileDialog::new()
-                            .set_title("选择Blender子版本目录")
+                            .set_title("选择Blender子版本目�?)
                             .set_directory(&version_dir)
                             .pick_folder();
                             
@@ -2081,8 +1932,7 @@ impl App {
                     target_dir.join("locale/zh_CN/LC_MESSAGES/blender.mo"),
                 ];
                 
-                // 检查每个路径
-                for path in mo_paths {
+                // 检查每个路�?                for path in mo_paths {
                     if path.exists() && path.is_file() {
                         self.state.add_log(&format!("找到MO文件: {}", path.display()));
                         found_mo_files.push(path);
@@ -2095,16 +1945,12 @@ impl App {
                     self.search_mo_files_recursively(&target_dir, &mut found_mo_files);
                 }
                 
-                // 如果找到文件，让用户选择或自动选择第一个
-                if !found_mo_files.is_empty() {
-                    // 按文件路径排序
-                    found_mo_files.sort();
+                // 如果找到文件，让用户选择或自动选择第一�?                if !found_mo_files.is_empty() {
+                    // 按文件路径排�?                    found_mo_files.sort();
                     
-                    // 如果只有一个文件，直接使用它
-                    if found_mo_files.len() == 1 {
+                    // 如果只有一个文件，直接使用�?                    if found_mo_files.len() == 1 {
                         let file_path = found_mo_files[0].clone();
-                        let orig_path = file_path.clone(); // 克隆一份用于日志显示
-                        // 复制到BLMM目录并使用BLMM目录中的文件
+                        let orig_path = file_path.clone(); // 克隆一份用于日志显�?                        // 复制到BLMM目录并使用BLMM目录中的文件
                         if let Some(blmm_path) = self.clone_main_mo_to_blmm(&file_path) {
                             self.state.main_mo_file = Some(blmm_path.clone());
                             self.config.main_mo_file = Some(blmm_path);
@@ -2116,7 +1962,7 @@ impl App {
                         self.add_log_with_path("已自动设置唯一找到的MO文件", &orig_path);
                     } else {
                         // 让用户从找到的文件中选择
-                        self.state.add_log(&format!("找到 {} 个MO文件，请选择一个:", found_mo_files.len()));
+                        self.state.add_log(&format!("找到 {} 个MO文件，请选择一�?", found_mo_files.len()));
                         
                         if let Some(selected_path) = rfd::FileDialog::new()
                             .set_title("选择Blender中文MO文件")
@@ -2124,8 +1970,7 @@ impl App {
                             .set_directory(found_mo_files[0].parent().unwrap_or(&PathBuf::from("/")))
                             .pick_file() {
                             
-                            let orig_path = selected_path.clone(); // 克隆一份用于日志显示
-                            // 复制到BLMM目录并使用BLMM目录中的文件
+                            let orig_path = selected_path.clone(); // 克隆一份用于日志显�?                            // 复制到BLMM目录并使用BLMM目录中的文件
                             if let Some(blmm_path) = self.clone_main_mo_to_blmm(&selected_path) {
                                 self.state.main_mo_file = Some(blmm_path.clone());
                                 self.config.main_mo_file = Some(blmm_path);
@@ -2138,17 +1983,15 @@ impl App {
                         }
                     }
                 } else {
-                    self.state.add_log("未找到Blender中文MO文件，请手动选择。");
+                    self.state.add_log("未找到Blender中文MO文件，请手动选择�?);
                     
-                    // 打开文件选择对话框
-                    if let Some(file) = rfd::FileDialog::new()
+                    // 打开文件选择对话�?                    if let Some(file) = rfd::FileDialog::new()
                         .add_filter("MO文件", &["mo"])
                         .set_title("选择Blender中文MO文件")
                         .set_directory(&target_dir)
                         .pick_file() {
                             // 复制到BLMM目录并使用BLMM目录中的文件
-                            let orig_file = file.clone(); // 克隆一份用于日志显示
-                            if let Some(blmm_path) = self.clone_main_mo_to_blmm(&file) {
+                            let orig_file = file.clone(); // 克隆一份用于日志显�?                            if let Some(blmm_path) = self.clone_main_mo_to_blmm(&file) {
                                 self.state.main_mo_file = Some(blmm_path.clone());
                                 self.config.main_mo_file = Some(blmm_path);
                             } else {
@@ -2161,7 +2004,7 @@ impl App {
                 }
             }
         } else {
-            self.state.add_log("未选择Blender目录，操作取消。");
+            self.state.add_log("未选择Blender目录，操作取消�?);
         }
     }
     
@@ -2186,8 +2029,7 @@ impl App {
                     path_str.contains("zh-") || path_str.contains("/zh/") || 
                     path_str.contains("\\zh\\")) && path_str.contains("blender") {
                     
-                    // 获取文件名用于日志显示
-                    let file_name = path.file_name()
+                    // 获取文件名用于日志显�?                    let file_name = path.file_name()
                         .map_or_else(|| "[未知文件]".to_string(), 
                                    |name| name.to_string_lossy().to_string());
                     self.state.add_log(&format!("递归搜索找到MO文件: {}", file_name));
@@ -2198,15 +2040,13 @@ impl App {
     }
 
     fn add_log_with_path(&mut self, message: &str, path: &PathBuf) {
-        // 提取文件名用于日志显示
-        let file_name = path.file_name()
+        // 提取文件名用于日志显�?        let file_name = path.file_name()
             .map_or_else(|| "[未知文件]".to_string(), 
                       |name| name.to_string_lossy().to_string());
         self.state.add_log(&format!("{}: {}", message, file_name));
     }
 
-    // 导出基础文件（不合并）
-    fn export_base_mo_file(&mut self) {
+    // 导出基础文件（不合并�?    fn export_base_mo_file(&mut self) {
         // 检查是否有主MO文件
         if self.state.main_mo_file.is_none() {
             self.state.add_log("错误: 请先在设置中设置主MO文件");
@@ -2215,32 +2055,25 @@ impl App {
         
         let base_mo_file = self.state.main_mo_file.clone().unwrap();
         
-        // 检查文件是否存在
-        if !base_mo_file.exists() {
-            self.state.add_log(&format!("错误: 基础MO文件不存在: {}", base_mo_file.display()));
+        // 检查文件是否存�?        if !base_mo_file.exists() {
+            self.state.add_log(&format!("错误: 基础MO文件不存�? {}", base_mo_file.display()));
             return;
         }
         
-        // 创建输出MO文件路径 - 使用用户设置的输出目录或桌面上的"BLMM导出"文件夹
-        let output_mo_path = if let Some(output_dir) = &self.state.output_directory {
-            // 使用用户设置的输出目录
-            if let Err(e) = std::fs::create_dir_all(output_dir) {
+        // 创建输出MO文件路径 - 使用用户设置的输出目录或桌面上的"BLMM导出"文件�?        let output_mo_path = if let Some(output_dir) = &self.state.output_directory {
+            // 使用用户设置的输出目�?            if let Err(e) = std::fs::create_dir_all(output_dir) {
                 self.state.add_log(&format!("创建输出目录失败: {}", e));
-                // 如果创建目录失败，回退到桌面上的"BLMM导出"文件夹
-                self.create_default_output_directory()
+                // 如果创建目录失败，回退到桌面上�?BLMM导出"文件�?                self.create_default_output_directory()
                     .map(|dir| dir.join("blender.mo"))
                     .unwrap_or_else(|| base_mo_file.with_file_name("blender.mo"))
             } else {
-                // 使用设置的输出目录
-                output_dir.join("blender.mo")
+                // 使用设置的输出目�?                output_dir.join("blender.mo")
             }
         } else {
-            // 未设置输出目录，使用桌面上的"BLMM导出"文件夹
-            self.create_default_output_directory()
+            // 未设置输出目录，使用桌面上的"BLMM导出"文件�?            self.create_default_output_directory()
                 .map(|dir| dir.join("blender.mo"))
                 .unwrap_or_else(|| {
-                    // 如果创建桌面文件夹失败，回退到主MO文件所在目录
-                    if let Some(parent) = base_mo_file.parent() {
+                    // 如果创建桌面文件夹失败，回退到主MO文件所在目�?                    if let Some(parent) = base_mo_file.parent() {
                         parent.join("blender.mo")
                     } else {
                         base_mo_file.with_file_name("blender.mo")
@@ -2249,7 +2082,7 @@ impl App {
         };
         
         // 复制文件
-        self.state.add_log(&format!("正在导出基础MO文件到: {}", output_mo_path.display()));
+        self.state.add_log(&format!("正在导出基础MO文件�? {}", output_mo_path.display()));
         match std::fs::copy(&base_mo_file, &output_mo_path) {
             Ok(_) => {
                 self.state.add_log(&format!("基础MO文件导出成功: {}", output_mo_path.display()));
@@ -2275,18 +2108,16 @@ impl App {
             return;
         }
         
-        // 检查是否有启用的语言包
-        let enabled_mods = self.state.installed_mods.iter()
+        // 检查是否有启用的语言�?        let enabled_mods = self.state.installed_mods.iter()
             .filter(|m| m.status == ModStatus::Enabled)
             .count();
             
         if enabled_mods == 0 && !self.state.needs_remerge {
-            self.state.add_log("错误: 没有启用的语言包需要合并");
+            self.state.add_log("错误: 没有启用的语言包需要合�?);
             return;
         }
         
-        // 设置合并状态
-        self.state.is_merging = true;
+        // 设置合并状�?        self.state.is_merging = true;
         self.state.merge_progress = 0.0;
         self.state.merge_progress_anim = 0;
         
@@ -2297,10 +2128,10 @@ impl App {
             .map(|m| m.path.clone())
             .collect();
         let ignore_main = self.state.ignore_main_mo_entries;
+        let main_mo_file = self.state.main_mo_file.clone().unwrap();
         
         self.thread_pool.spawn(move || {
-            // 通知开始
-            let _ = tx.send(MergeStatus::Started);
+            // 通知开�?            let _ = tx.send(MergeStatus::Started);
             
             // 创建缓存目录
             let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
@@ -2314,8 +2145,7 @@ impl App {
                 return;
             }
             
-            // 缓存合并PO的路径
-            let cached_po_path = cache_dir.join("cached_merged.po");
+            // 缓存合并PO的路�?            let cached_po_path = cache_dir.join("cached_merged.po");
             
             // 更新进度 25%
             let _ = tx.send(MergeStatus::Progress(0.25));
@@ -2349,20 +2179,17 @@ impl eframe::App for App {
         let visuals = crate::models::ThemeManager::get_visuals(&self.config.theme);
         ctx.set_visuals(visuals);
         
-        // 为了向后兼容，保持dark_mode标志与主题同步
-        self.state.dark_mode = self.config.theme != crate::models::AppTheme::Light 
+        // 为了向后兼容，保持dark_mode标志与主题同�?        self.state.dark_mode = self.config.theme != crate::models::AppTheme::Light 
             && self.config.theme != crate::models::AppTheme::Sepia;
         
-        // 顶部菜单栏
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+        // 顶部菜单�?        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
-                // 移除全局暗/亮模式按钮
-                // egui::widgets::global_dark_light_mode_buttons(ui);
+                // 移除全局�?亮模式按�?                // egui::widgets::global_dark_light_mode_buttons(ui);
                 // ui.add_space(8.0);
                 
                 // 文件菜单
                 ui.menu_button("文件", |ui| {
-                    if ui.button("添加语言包").clicked() {
+                    if ui.button("添加语言�?).clicked() {
                         self.state.show_mods = true;
                         ui.close_menu();
                     }
@@ -2378,17 +2205,16 @@ impl eframe::App for App {
                     
                     ui.separator();
                     
-                    if ui.button("退出").clicked() {
+                    if ui.button("退�?).clicked() {
                         frame.close();
-                        // 关闭时保存配置
-                        self.save_config_on_exit();
+                        // 关闭时保存配�?                        self.save_config_on_exit();
                         ui.close_menu();
                     }
                 });
                 
                 // 工具菜单
                 ui.menu_button("工具", |ui| {
-                    if ui.button("合并语言包").clicked() {
+                    if ui.button("合并语言�?).clicked() {
                         self.merge_po_files();
                         ui.close_menu();
                     }

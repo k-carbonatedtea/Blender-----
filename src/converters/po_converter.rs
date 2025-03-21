@@ -50,7 +50,7 @@ impl PoConverter {
         let chunks: Vec<_> = lines.chunks(100).collect();
         
         // 首先处理头部信息
-        let mut header = PoEntry {
+        let _header = PoEntry {
             msgid: String::new(),
             msgstr: String::new(),
         };

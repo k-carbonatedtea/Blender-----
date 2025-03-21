@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use std::time::{SystemTime, Instant, Duration};
+use std::time::Instant;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ConversionType {
@@ -58,6 +58,7 @@ impl std::fmt::Display for ModStatus {
 #[derive(Clone)]
 pub struct FileOperation {
     pub input_file: Option<PathBuf>,
+    #[allow(dead_code)]
     pub input_path2: Option<PathBuf>,
     pub output_file: Option<PathBuf>,
     pub status: ConversionStatus,
@@ -92,10 +93,13 @@ pub struct ModInfo {
     pub path: PathBuf,
     pub status: ModStatus,
     pub description: Option<String>,
+    #[allow(dead_code)]
     pub author: Option<String>,
     pub version: Option<String>,
     pub install_date: Option<chrono::DateTime<chrono::Local>>,
+    #[allow(dead_code)]
     pub last_updated: Option<chrono::DateTime<chrono::Local>>,
+    pub original_type: Option<String>,
 }
 
 impl Default for ModInfo {
@@ -109,6 +113,7 @@ impl Default for ModInfo {
             version: None,
             install_date: None,
             last_updated: None,
+            original_type: None,
         }
     }
 } 

@@ -1,4 +1,4 @@
-use super::operation::{FileOperation, ConversionStatus, ModInfo, ModStatus};
+use super::operation::{FileOperation, ConversionStatus, ModInfo};
 use eframe::epaint::Color32;
 use std::path::PathBuf;
 
@@ -11,15 +11,20 @@ pub enum ModsTab {
 
 pub struct AppState {
     pub operations: Vec<FileOperation>,
+    #[allow(dead_code)]
     pub current_operation: FileOperation,
     pub logs: Vec<String>,
     pub dark_mode: bool,
     pub show_settings: bool,
     pub show_about: bool,
     pub show_logs: bool,
+    #[allow(dead_code)]
     pub file_dialog_open: bool,
+    #[allow(dead_code)]
     pub processing_index: Option<usize>,
+    #[allow(dead_code)]
     pub status_message: Option<String>,
+    #[allow(dead_code)]
     pub status_color: Color32,
     pub auto_close: bool,
     pub auto_batch: bool,
@@ -28,6 +33,7 @@ pub struct AppState {
     pub show_mods_tab: ModsTab,
     pub main_mo_file: Option<PathBuf>,
     pub mods_directory: Option<PathBuf>,
+    pub output_directory: Option<PathBuf>,
     pub cached_merged_po: Option<PathBuf>,
     pub needs_remerge: bool,
     pub ignore_main_mo_entries: bool,
@@ -35,6 +41,8 @@ pub struct AppState {
     pub merge_progress: f32,
     pub merge_progress_anim: u32,
     pub show_help: bool,
+    pub rename_mod_index: Option<usize>,
+    pub rename_mod_name: String,
 }
 
 impl Default for AppState {
@@ -58,6 +66,7 @@ impl Default for AppState {
             show_mods_tab: ModsTab::Mods,
             main_mo_file: None,
             mods_directory: None,
+            output_directory: None,
             cached_merged_po: None,
             needs_remerge: false,
             ignore_main_mo_entries: false,
@@ -65,6 +74,8 @@ impl Default for AppState {
             merge_progress: 0.0,
             merge_progress_anim: 0,
             show_help: false,
+            rename_mod_index: None,
+            rename_mod_name: String::new(),
         }
     }
 }
@@ -80,6 +91,7 @@ impl AppState {
     }
     
     /// 获取所有待处理任务的数量
+    #[allow(dead_code)]
     pub fn pending_count(&self) -> usize {
         self.operations.iter()
             .filter(|op| op.status == ConversionStatus::Pending)
@@ -87,6 +99,7 @@ impl AppState {
     }
     
     /// 获取处理中任务的数量
+    #[allow(dead_code)]
     pub fn processing_count(&self) -> usize {
         self.operations.iter()
             .filter(|op| op.status == ConversionStatus::Processing)
@@ -94,6 +107,7 @@ impl AppState {
     }
     
     /// 获取已完成任务的数量
+    #[allow(dead_code)]
     pub fn completed_count(&self) -> usize {
         self.operations.iter()
             .filter(|op| op.status == ConversionStatus::Completed)
@@ -101,6 +115,7 @@ impl AppState {
     }
     
     /// 获取失败任务的数量
+    #[allow(dead_code)]
     pub fn failed_count(&self) -> usize {
         self.operations.iter()
             .filter(|op| op.status == ConversionStatus::Failed)

@@ -1,4 +1,4 @@
-use eframe::egui;
+﻿use eframe::egui;
 use egui::{Color32, RichText, Ui};
 use std::path::PathBuf;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -15,8 +15,7 @@ use crate::converters::po_converter::PoConverter;
 use crate::converters::po_merger;
 use crate::converters::csv_converter::CsvConverter;
 
-// 添加合并状态枚举
-pub enum MergeStatus {
+// 娣诲姞鍚堝苟鐘舵€佹灇涓?pub enum MergeStatus {
     Started,
     Progress(f32),
     Completed(PathBuf),
@@ -53,31 +52,29 @@ impl App {
             .build()
             .unwrap();
         
-        // 加载配置文件
+        // 鍔犺浇閰嶇疆鏂囦欢
         let mut config = AppConfig::load();
         
-        // 创建应用状态并从配置中设置值
-        let mut state = AppState::default();
+        // 鍒涘缓搴旂敤鐘舵€佸苟浠庨厤缃腑璁剧疆鍊?        let mut state = AppState::default();
         state.main_mo_file = config.main_mo_file.clone();
         
-        // 设置固定的语言包目录
-        let mods_dir = if let Some(local_dir) = dirs::data_local_dir() {
+        // 璁剧疆鍥哄畾鐨勮瑷€鍖呯洰褰?        let mods_dir = if let Some(local_dir) = dirs::data_local_dir() {
             local_dir.join("BLMM").join("mods")
         } else {
             std::env::temp_dir().join("BLMM").join("mods")
         };
         
-        // 确保目录存在
+        // 纭繚鐩綍瀛樺湪
         let _ = std::fs::create_dir_all(&mods_dir);
         
-        // 设置目录
+        // 璁剧疆鐩綍
         state.mods_directory = Some(mods_dir.clone());
         config.mods_directory = Some(mods_dir);
         
-        // 设置输出目录
+        // 璁剧疆杈撳嚭鐩綍
         state.output_directory = config.output_directory.clone();
         
-        // 为了向后兼容，根据主题设置dark_mode标志
+        // 涓轰簡鍚戝悗鍏煎锛屾牴鎹富棰樿缃甦ark_mode鏍囧織
         state.dark_mode = config.theme != crate::models::AppTheme::Light 
             && config.theme != crate::models::AppTheme::Sepia;
             
@@ -86,8 +83,7 @@ impl App {
         state.show_logs = config.show_logs;
         state.ignore_main_mo_entries = config.ignore_main_mo_entries;
         
-        // 默认显示语言包管理界面
-        state.show_mods = true;
+        // 榛樿鏄剧ず璇█鍖呯鐞嗙晫闈?        state.show_mods = true;
         state.show_mods_tab = ModsTab::Mods;
             
         let mut app = Self {
@@ -104,8 +100,7 @@ impl App {
             install_path: String::new(),
         };
         
-        // 启动时自动扫描语言包目录
-        app.scan_mods_directory();
+        // 鍚姩鏃惰嚜鍔ㄦ壂鎻忚瑷€鍖呯洰褰?        app.scan_mods_directory();
         
         app
     }
@@ -120,23 +115,22 @@ impl App {
                             self.state.operations[index].status = ConversionStatus::Completed;
                             self.state.operations[index].end_time = Some(now);
                             
-                            // 计算耗时（毫秒和秒）
+                            // 璁＄畻鑰楁椂锛堟绉掑拰绉掞級
                             self.state.operations[index].duration = Some(duration.as_secs_f64());
                             self.state.operations[index].elapsed_milliseconds = Some(duration.as_millis());
                             
                             if let Some(output_file) = &self.state.operations[index].output_file {
-                                self.state.add_log(&format!("转换成功: {}", output_file.display()));
+                                self.state.add_log(&format!("杞崲鎴愬姛: {}", output_file.display()));
                             }
                         }
                         Err(e) => {
                             self.state.operations[index].status = ConversionStatus::Failed;
                             self.state.operations[index].error = Some(e.clone());
-                            self.state.add_log(&format!("转换失败: {}", e));
+                            self.state.add_log(&format!("杞崲澶辫触: {}", e));
                         }
                     }
                     
-                    // 检查是否有待处理的任务，如果有，则自动开始
-                    if self.state.auto_batch {
+                    // 妫€鏌ユ槸鍚︽湁寰呭鐞嗙殑浠诲姟锛屽鏋滄湁锛屽垯鑷姩寮€濮?                    if self.state.auto_batch {
                         let next_pending = self.state.operations.iter().enumerate()
                             .find(|(_, op)| op.status == ConversionStatus::Pending)
                             .map(|(i, _)| i);
@@ -146,17 +140,17 @@ impl App {
                         }
                     }
                 } else {
-                    self.state.add_log(&format!("错误: 收到无效的操作索引 {}", index));
+                    self.state.add_log(&format!("閿欒: 鏀跺埌鏃犳晥鐨勬搷浣滅储寮?{}", index));
                 }
             }
         }
     }
     
-    // 转换单个文件
+    // 杞崲鍗曚釜鏂囦欢
     fn convert_file(&mut self, operation_index: usize) {
         if operation_index < self.state.operations.len() {
-            // 添加调试日志
-            self.state.add_log(&format!("开始转换任务 #{}", operation_index + 1));
+            // 娣诲姞璋冭瘯鏃ュ織
+            self.state.add_log(&format!("寮€濮嬭浆鎹换鍔?#{}", operation_index + 1));
             self.start_conversion(operation_index);
         }
     }
@@ -168,8 +162,7 @@ impl App {
         
         let operation = self.state.operations[operation_index].clone();
         self.state.operations[operation_index].status = ConversionStatus::Processing;
-        // 记录开始时间
-        self.state.operations[operation_index].start_time = Some(Instant::now());
+        // 璁板綍寮€濮嬫椂闂?        self.state.operations[operation_index].start_time = Some(Instant::now());
         
         if let Some(tx) = self.tx.clone() {
             let pool = self.thread_pool.clone();
@@ -183,7 +176,7 @@ impl App {
                             MoConverter::convert_mo_to_po(input, output)
                                 .map(|_| start.elapsed())
                         } else {
-                            Err("输入或输出路径未设置".to_string())
+                            Err("杈撳叆鎴栬緭鍑鸿矾寰勬湭璁剧疆".to_string())
                         }
                     }
                     ConversionType::PoToMo => {
@@ -191,7 +184,7 @@ impl App {
                             PoConverter::convert_po_to_mo(input, output)
                                 .map(|_| start.elapsed())
                         } else {
-                            Err("输入或输出路径未设置".to_string())
+                            Err("杈撳叆鎴栬緭鍑鸿矾寰勬湭璁剧疆".to_string())
                         }
                     }
                 };
@@ -202,20 +195,18 @@ impl App {
     }
     
     fn render_header(&mut self, ui: &mut Ui) {
-        // 获取主题的强调色，用于标题
-        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
+        // 鑾峰彇涓婚鐨勫己璋冭壊锛岀敤浜庢爣棰?        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
         
-        ui.heading(RichText::new("Blender字典合并管理器 By:凌川雪").color(accent_color));
-        ui.label("快速将语言包PO文件转换并合并到MO文件中");
+        ui.heading(RichText::new("Blender瀛楀吀鍚堝苟绠＄悊鍣?By:鍑屽窛闆?).color(accent_color));
+        ui.label("蹇€熷皢璇█鍖匬O鏂囦欢杞崲骞跺悎骞跺埌MO鏂囦欢涓?);
         
         ui.add_space(10.0);
     }
     
     fn render_operations(&mut self, ui: &mut Ui) {
-        // 获取主题的强调色，用于标题
-        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
+        // 鑾峰彇涓婚鐨勫己璋冭壊锛岀敤浜庢爣棰?        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
         
-        ui.heading(RichText::new("文件列表").color(accent_color));
+        ui.heading(RichText::new("鏂囦欢鍒楄〃").color(accent_color));
         
         let mut to_delete = None;
         let mut start_conversion_index = None;
@@ -230,102 +221,98 @@ impl App {
                 
                 ui.vertical(|ui| {
                     ui.horizontal(|ui| {
-                        ui.label("类型: ");
-                        ui.radio_value(&mut operation.conversion_type, ConversionType::MoToPo, "MO → PO");
-                        ui.radio_value(&mut operation.conversion_type, ConversionType::PoToMo, "PO → MO");
+                        ui.label("绫诲瀷: ");
+                        ui.radio_value(&mut operation.conversion_type, ConversionType::MoToPo, "MO 鈫?PO");
+                        ui.radio_value(&mut operation.conversion_type, ConversionType::PoToMo, "PO 鈫?MO");
                     });
                     
                     ui.horizontal(|ui| {
-                        ui.label("输入: ");
+                        ui.label("杈撳叆: ");
                         if let Some(input) = &operation.input_file {
-                            // 只显示文件名
+                            // 鍙樉绀烘枃浠跺悕
                             let file_name = input.file_name()
-                                .map_or_else(|| "[未知]".to_string(), 
+                                .map_or_else(|| "[鏈煡]".to_string(), 
                                           |name| name.to_string_lossy().to_string());
                             let response = ui.label(file_name);
                             
-                            // 悬停时显示完整路径
-                            let full_path = input.to_string_lossy().to_string();
+                            // 鎮仠鏃舵樉绀哄畬鏁磋矾寰?                            let full_path = input.to_string_lossy().to_string();
                             response.on_hover_text(full_path);
                         } else {
-                            ui.label("[未设置]");
+                            ui.label("[鏈缃甝");
                         }
                         
-                        if ui.button("浏览").clicked() {
+                        if ui.button("娴忚").clicked() {
                             browse_input_index = Some(i);
                         }
                     });
                     
                     ui.horizontal(|ui| {
-                        ui.label("输出: ");
+                        ui.label("杈撳嚭: ");
                         if let Some(output) = &operation.output_file {
-                            // 只显示文件名
+                            // 鍙樉绀烘枃浠跺悕
                             let file_name = output.file_name()
-                                .map_or_else(|| "[未知]".to_string(), 
+                                .map_or_else(|| "[鏈煡]".to_string(), 
                                           |name| name.to_string_lossy().to_string());
                             let response = ui.label(file_name);
                             
-                            // 悬停时显示完整路径
-                            let full_path = output.to_string_lossy().to_string();
+                            // 鎮仠鏃舵樉绀哄畬鏁磋矾寰?                            let full_path = output.to_string_lossy().to_string();
                             response.on_hover_text(full_path);
                         } else {
-                            ui.label("[未设置]");
+                            ui.label("[鏈缃甝");
                         }
                         
-                        if ui.button("浏览").clicked() {
+                        if ui.button("娴忚").clicked() {
                             browse_output_index = Some(i);
                         }
                     });
                     
                     ui.horizontal(|ui| {
-                        ui.label("状态: ");
+                        ui.label("鐘舵€? ");
                         match operation.status {
                             ConversionStatus::Pending => {
                                 ui.label(operation.status.to_string());
-                                if ui.button("开始").clicked() {
+                                if ui.button("寮€濮?).clicked() {
                                     start_conversion_index = Some(i);
                                 }
                             },
                             ConversionStatus::Processing => {
                                 if let Some(start) = operation.start_time {
                                     let elapsed = start.elapsed();
-                                    ui.label(format!("处理中 ({:.2}秒)...", elapsed.as_secs_f64()));
+                                    ui.label(format!("澶勭悊涓?({:.2}绉?...", elapsed.as_secs_f64()));
                                 } else {
-                                    ui.label("处理中...");
+                                    ui.label("澶勭悊涓?..");
                                 }
                             },
                             ConversionStatus::Completed => {
-                                // 获取成功状态颜色
-                                let (_success_color, _warning_color, _error_color, _info_color) =
+                                // 鑾峰彇鎴愬姛鐘舵€侀鑹?                                let (_success_color, _warning_color, _error_color, _info_color) =
                                     crate::models::ThemeManager::get_status_colors();
-                                ui.label(RichText::new("完成").color(Color32::LIGHT_BLUE));
+                                ui.label(RichText::new("瀹屾垚").color(Color32::LIGHT_BLUE));
                                 if let Some(duration) = operation.duration {
-                                    ui.label(format!("({:.3}秒)", duration));
+                                    ui.label(format!("({:.3}绉?", duration));
                                 }
                                 if let Some(elapsed_ms) = operation.elapsed_milliseconds {
-                                    ui.label(format!("[{}毫秒]", elapsed_ms));
+                                    ui.label(format!("[{}姣]", elapsed_ms));
                                 }
                                 
-                                if ui.button("再次转换").clicked() {
+                                if ui.button("鍐嶆杞崲").clicked() {
                                     reset_completed_index = Some(i);
                                 }
                             },
                             ConversionStatus::Failed => {
-                                // 获取错误状态颜色
-                                let (_success_color, _warning_color, _error_color, _info_color) =
+                                // 鑾峰彇閿欒鐘舵€侀鑹?                                let (_success_color, _warning_color, _error_color, _info_color) =
                                     crate::models::ThemeManager::get_status_colors();
-                                ui.label(RichText::new("失败").color(Color32::RED));
+                                ui.label(RichText::new("澶辫触").color(Color32::RED));
                                 if let Some(error) = &operation.error {
                                     ui.label(RichText::new(error).color(Color32::RED));
                                 }
                                 
-                                if ui.button("重试").clicked() {
+                                if ui.button("閲嶈瘯").clicked() {
                                     retry_failed_index = Some(i);
                                 }
                             },
                         }
                         
-                        if ui.button("删除").clicked() {
+                        if ui.button("鍒犻櫎").clicked() {
                             to_delete = Some(i);
                         }
                     });
@@ -335,7 +322,7 @@ impl App {
         ui.separator();
     }
     
-        // 处理浏览输入文件
+        // 澶勭悊娴忚杈撳叆鏂囦欢
         if let Some(i) = browse_input_index {
             if i < self.state.operations.len() {
                 let operation = &mut self.state.operations[i];
@@ -345,12 +332,11 @@ impl App {
                 };
                 
                 if let Some(file) = rfd::FileDialog::new()
-                    .add_filter("文件", &[ext])
+                    .add_filter("鏂囦欢", &[ext])
                     .pick_file() {
                         operation.input_file = Some(file.clone());
                         
-                        // 自动设置输出文件名
-                        let mut output_file = file.clone();
+                        // 鑷姩璁剧疆杈撳嚭鏂囦欢鍚?                        let mut output_file = file.clone();
                         let new_ext = if ext == "mo" { "po" } else { "mo" };
                         output_file.set_extension(new_ext);
                         operation.output_file = Some(output_file);
@@ -358,7 +344,7 @@ impl App {
             }
         }
         
-        // 处理浏览输出文件
+        // 澶勭悊娴忚杈撳嚭鏂囦欢
         if let Some(i) = browse_output_index {
             if i < self.state.operations.len() {
                 let operation = &mut self.state.operations[i];
@@ -368,14 +354,14 @@ impl App {
                 };
                 
                 if let Some(file) = rfd::FileDialog::new()
-                    .add_filter("文件", &[ext])
+                    .add_filter("鏂囦欢", &[ext])
                     .save_file() {
                         operation.output_file = Some(file);
                     }
             }
         }
         
-        // 处理重置操作
+        // 澶勭悊閲嶇疆鎿嶄綔
         if let Some(i) = reset_completed_index {
             if i < self.state.operations.len() {
                 let operation = &mut self.state.operations[i];
@@ -389,7 +375,7 @@ impl App {
             }
         }
         
-        // 处理重试操作
+        // 澶勭悊閲嶈瘯鎿嶄綔
         if let Some(i) = retry_failed_index {
             if i < self.state.operations.len() {
                 let operation = &mut self.state.operations[i];
@@ -399,12 +385,11 @@ impl App {
             }
         }
         
-        // 处理开始转换操作
-        if let Some(i) = start_conversion_index {
+        // 澶勭悊寮€濮嬭浆鎹㈡搷浣?        if let Some(i) = start_conversion_index {
             self.convert_file(i);
         }
         
-        // 处理删除操作
+        // 澶勭悊鍒犻櫎鎿嶄綔
         if let Some(i) = to_delete {
             self.state.operations.remove(i);
         }
@@ -412,14 +397,14 @@ impl App {
         ui.horizontal(|ui| {
             let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
             
-            // 样式化的添加按钮
-            if ui.add(egui::Button::new(RichText::new("添加MO→PO任务").color(accent_color))
+            // 鏍峰紡鍖栫殑娣诲姞鎸夐挳
+            if ui.add(egui::Button::new(RichText::new("娣诲姞MO鈫扨O浠诲姟").color(accent_color))
                      .min_size(egui::vec2(140.0, 24.0)))
                      .clicked() {
                 self.open_specific_file_dialog(ConversionType::MoToPo);
             }
             
-            if ui.add(egui::Button::new(RichText::new("添加PO→MO任务").color(accent_color))
+            if ui.add(egui::Button::new(RichText::new("娣诲姞PO鈫扢O浠诲姟").color(accent_color))
                      .min_size(egui::vec2(140.0, 24.0)))
                      .clicked() {
                 self.open_specific_file_dialog(ConversionType::PoToMo);
@@ -428,7 +413,7 @@ impl App {
             let (_success_color, _warning_color, _error_color, _info_color) =
                 crate::models::ThemeManager::get_status_colors();
             
-            if ui.add(egui::Button::new(RichText::new("批量处理").color(Color32::LIGHT_BLUE))
+            if ui.add(egui::Button::new(RichText::new("鎵归噺澶勭悊").color(Color32::LIGHT_BLUE))
                      .min_size(egui::vec2(100.0, 24.0)))
                      .clicked() {
                 self.batch_process();
@@ -436,24 +421,23 @@ impl App {
             
             ui.separator();
             
-            ui.checkbox(&mut self.state.auto_close, "处理完成后自动关闭");
-            ui.checkbox(&mut self.state.auto_batch, "自动批处理");
+            ui.checkbox(&mut self.state.auto_close, "澶勭悊瀹屾垚鍚庤嚜鍔ㄥ叧闂?);
+            ui.checkbox(&mut self.state.auto_batch, "鑷姩鎵瑰鐞?);
             
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.label(format!("线程池: {} 线程", num_cpus::get()));
+                ui.label(format!("绾跨▼姹? {} 绾跨▼", num_cpus::get()));
             });
         });
     }
     
     fn render_logs(&mut self, ui: &mut Ui) {
-        ui.collapsing("日志", |ui| {
+        ui.collapsing("鏃ュ織", |ui| {
             egui::ScrollArea::vertical().max_height(150.0).show(ui, |ui| {
                 for log in &self.state.logs {
                     ui.label(log);
                 }
                 
-                // 自动滚动到底部
-                if !self.state.logs.is_empty() {
+                // 鑷姩婊氬姩鍒板簳閮?                if !self.state.logs.is_empty() {
                     ui.scroll_to_cursor(Some(egui::Align::BOTTOM));
                 }
             });
@@ -462,61 +446,53 @@ impl App {
     
     fn render_settings(&mut self, ctx: &egui::Context) {
         if self.state.show_settings {
-            // 当通过菜单打开设置窗口时，自动切换到语言包管理器的设置标签页
+            // 褰撻€氳繃鑿滃崟鎵撳紑璁剧疆绐楀彛鏃讹紝鑷姩鍒囨崲鍒拌瑷€鍖呯鐞嗗櫒鐨勮缃爣绛鹃〉
             self.state.show_mods = true;
             self.state.show_mods_tab = ModsTab::Settings;
             self.state.show_settings = false;
         }
     }
     
-    // 打开文件选择对话框
-    #[allow(dead_code)]
+    // 鎵撳紑鏂囦欢閫夋嫨瀵硅瘽妗?    #[allow(dead_code)]
     fn open_file_dialog(&mut self) {
-        // 创建一个新的操作，使用当前应用状态的转换类型
+        // 鍒涘缓涓€涓柊鐨勬搷浣滐紝浣跨敤褰撳墠搴旂敤鐘舵€佺殑杞崲绫诲瀷
         let mut new_operation = FileOperation::default();
         
-        // 根据当前转换类型设置文件过滤器
-        let ext = match new_operation.conversion_type {
+        // 鏍规嵁褰撳墠杞崲绫诲瀷璁剧疆鏂囦欢杩囨护鍣?        let ext = match new_operation.conversion_type {
             ConversionType::MoToPo => "mo",
             _ => "po"
         };
         
-        // 添加调试日志
-        self.state.add_log(&format!("正在选择{}文件...", ext));
+        // 娣诲姞璋冭瘯鏃ュ織
+        self.state.add_log(&format!("姝ｅ湪閫夋嫨{}鏂囦欢...", ext));
         
-        // 打开文件选择对话框
-        if let Some(file) = rfd::FileDialog::new()
-            .add_filter("文件", &[ext])
-            .set_title(&format!("选择{}文件", ext))
+        // 鎵撳紑鏂囦欢閫夋嫨瀵硅瘽妗?        if let Some(file) = rfd::FileDialog::new()
+            .add_filter("鏂囦欢", &[ext])
+            .set_title(&format!("閫夋嫨{}鏂囦欢", ext))
                                 .pick_file() {
                 new_operation.input_file = Some(file.clone());
                                     
-                                    // 自动设置输出文件名
-                let mut output_file = file.clone();
+                                    // 鑷姩璁剧疆杈撳嚭鏂囦欢鍚?                let mut output_file = file.clone();
                 let new_ext = if ext == "mo" { "po" } else { "mo" };
                 output_file.set_extension(new_ext);
                 new_operation.output_file = Some(output_file.clone());
                 
-                // 添加到操作列表
-                self.state.operations.push(new_operation);
-                self.state.add_log(&format!("已添加新任务: {} → {}", 
+                // 娣诲姞鍒版搷浣滃垪琛?                self.state.operations.push(new_operation);
+                self.state.add_log(&format!("宸叉坊鍔犳柊浠诲姟: {} 鈫?{}", 
                     file.display(), 
                     output_file.display()));
             } else {
-                self.state.add_log("文件选择已取消");
+                self.state.add_log("鏂囦欢閫夋嫨宸插彇娑?);
             }
     }
     
-    // 批量处理所有待处理的文件
-    fn batch_process(&mut self) {
-        // 获取所有待处理的文件索引
-        let pending_indices: Vec<usize> = self.state.operations.iter().enumerate()
+    // 鎵归噺澶勭悊鎵€鏈夊緟澶勭悊鐨勬枃浠?    fn batch_process(&mut self) {
+        // 鑾峰彇鎵€鏈夊緟澶勭悊鐨勬枃浠剁储寮?        let pending_indices: Vec<usize> = self.state.operations.iter().enumerate()
             .filter(|(_, op)| op.status == ConversionStatus::Pending)
             .map(|(i, _)| i)
             .collect();
             
-        // 开始处理第一个文件
-        if let Some(&index) = pending_indices.first() {
+        // 寮€濮嬪鐞嗙涓€涓枃浠?        if let Some(&index) = pending_indices.first() {
             self.convert_file(index);
         }
     }
@@ -526,67 +502,61 @@ impl App {
         dt.format("%Y-%m-%d %H:%M:%S").to_string()
     }
 
-    // 添加新的文件选择对话框函数，可以指定转换类型
+    // 娣诲姞鏂扮殑鏂囦欢閫夋嫨瀵硅瘽妗嗗嚱鏁帮紝鍙互鎸囧畾杞崲绫诲瀷
     fn open_specific_file_dialog(&mut self, conversion_type: ConversionType) {
-        // 创建一个新的操作，设置指定的转换类型
-        let mut new_operation = FileOperation::default();
+        // 鍒涘缓涓€涓柊鐨勬搷浣滐紝璁剧疆鎸囧畾鐨勮浆鎹㈢被鍨?        let mut new_operation = FileOperation::default();
         new_operation.conversion_type = conversion_type;
         
-        // 根据转换类型设置文件过滤器
-        let ext = match conversion_type {
+        // 鏍规嵁杞崲绫诲瀷璁剧疆鏂囦欢杩囨护鍣?        let ext = match conversion_type {
             ConversionType::MoToPo => "mo",
             ConversionType::PoToMo => "po",
         };
         
-        // 添加调试日志
-        self.state.add_log(&format!("正在选择{}文件...", ext));
+        // 娣诲姞璋冭瘯鏃ュ織
+        self.state.add_log(&format!("姝ｅ湪閫夋嫨{}鏂囦欢...", ext));
         
-        // 打开文件选择对话框
-        if let Some(file) = rfd::FileDialog::new()
-            .add_filter("文件", &[ext])
-            .set_title(&format!("选择{}文件", ext))
+        // 鎵撳紑鏂囦欢閫夋嫨瀵硅瘽妗?        if let Some(file) = rfd::FileDialog::new()
+            .add_filter("鏂囦欢", &[ext])
+            .set_title(&format!("閫夋嫨{}鏂囦欢", ext))
             .pick_file() 
         {
             new_operation.input_file = Some(file.clone());
             
-            // 自动设置输出文件名
-            let mut output_file = file.clone();
+            // 鑷姩璁剧疆杈撳嚭鏂囦欢鍚?            let mut output_file = file.clone();
             let new_ext = if ext == "mo" { "po" } else { "mo" };
             output_file.set_extension(new_ext);
             new_operation.output_file = Some(output_file.clone());
             
-            // 添加到操作列表
-            self.state.operations.push(new_operation);
-            self.state.add_log(&format!("已添加新任务: {} → {}", 
+            // 娣诲姞鍒版搷浣滃垪琛?            self.state.operations.push(new_operation);
+            self.state.add_log(&format!("宸叉坊鍔犳柊浠诲姟: {} 鈫?{}", 
                 file.display(), 
                 output_file.display()));
         } else {
-            self.state.add_log("文件选择已取消");
+            self.state.add_log("鏂囦欢閫夋嫨宸插彇娑?);
         }
     }
 
     fn render_mods(&mut self, ui: &mut Ui) {
-        // 获取主题强调色
-        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
+        // 鑾峰彇涓婚寮鸿皟鑹?        let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
         
         // Top menu bar
         ui.horizontal(|ui| {
             if ui.selectable_label(self.state.show_mods_tab == ModsTab::Mods, 
-                           RichText::new("语言包").color(
+                           RichText::new("璇█鍖?).color(
                                if self.state.show_mods_tab == ModsTab::Mods { accent_color } 
                                else { ui.style().visuals.text_color() }
                            )).clicked() {
                 self.state.show_mods_tab = ModsTab::Mods;
             }
             if ui.selectable_label(self.state.show_mods_tab == ModsTab::Package, 
-                           RichText::new("仓库").color(
+                           RichText::new("浠撳簱").color(
                                if self.state.show_mods_tab == ModsTab::Package { accent_color } 
                                else { ui.style().visuals.text_color() }
                            )).clicked() {
                 self.state.show_mods_tab = ModsTab::Package;
             }
             if ui.selectable_label(self.state.show_mods_tab == ModsTab::Settings, 
-                           RichText::new("设置").color(
+                           RichText::new("璁剧疆").color(
                                if self.state.show_mods_tab == ModsTab::Settings { accent_color } 
                                else { ui.style().visuals.text_color() }
                            )).clicked() {
@@ -604,7 +574,7 @@ impl App {
     }
 
     fn render_mods_list(&mut self, ui: &mut Ui) {
-        // 获取主题颜色
+        // 鑾峰彇涓婚棰滆壊
         let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
         let (_success_color, _warning_color, _error_color, _info_color) =
             crate::models::ThemeManager::get_status_colors();
@@ -615,7 +585,7 @@ impl App {
                 egui::ComboBox::from_id_source("profile_selector")
                     .selected_text(&self.selected_category)
                     .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut self.selected_category, "Default".to_string(), "默认");
+                        ui.selectable_value(&mut self.selected_category, "Default".to_string(), "榛樿");
                         // Could add other categories here
                     });
             });
@@ -623,62 +593,58 @@ impl App {
             if ui.button("+").clicked() {
                 // Add new profile
             }
-            if ui.button("≡").clicked() {
+            if ui.button("鈮?).clicked() {
                 // Show profile options
             }
 
-            // 添加"安装语言包"按钮，使用强调色
-            if ui.add(egui::Button::new(RichText::new("安装语言包(可多选)").color(accent_color))
-                .min_size(egui::vec2(150.0, 24.0)))
-                .clicked() {
+            // 娣诲姞"瀹夎璇█鍖?鎸夐挳锛屼娇鐢ㄥ己璋冭壊
+            if ui.add(egui::Button::new(RichText::new("瀹夎璇█鍖?鍙閫?").color(accent_color))
+                     .min_size(egui::vec2(150.0, 24.0)))
+                     .clicked() {
                 self.install_new_mod();
             }
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 let enabled_count = self.state.installed_mods.iter().filter(|m| m.status == ModStatus::Enabled).count();
-                ui.label(format!("{} 语言包 / {} 已启用", self.state.installed_mods.len(), enabled_count));
+                ui.label(format!("{} 璇█鍖?/ {} 宸插惎鐢?, self.state.installed_mods.len(), enabled_count));
                 
-                // 添加"导出基础文件"按钮 - 放在合并按钮旁边
-                ui.add_space(5.0); // 增加一点间距
-                if ui.add(egui::Button::new(RichText::new("导出基础文件").color(Color32::LIGHT_GREEN))
+                // 娣诲姞"瀵煎嚭鍩虹鏂囦欢"鎸夐挳 - 鏀惧湪鍚堝苟鎸夐挳鏃佽竟
+                ui.add_space(5.0); // 澧炲姞涓€鐐归棿璺?                if ui.add(egui::Button::new(RichText::new("瀵煎嚭鍩虹鏂囦欢").color(Color32::LIGHT_GREEN))
                     .min_size(egui::vec2(110.0, 28.0)))
-                    .on_hover_text("直接导出基础MO文件（不合并），从名称中移除base")
+                    .on_hover_text("鐩存帴瀵煎嚭鍩虹MO鏂囦欢锛堜笉鍚堝苟锛夛紝浠庡悕绉颁腑绉婚櫎base")
                     .clicked() {
                     self.export_base_mo_file();
                 }
                 
-                // 当有启用的语言包时或需要重新合并时显示合并按钮
+                // 褰撴湁鍚敤鐨勮瑷€鍖呮椂鎴栭渶瑕侀噸鏂板悎骞舵椂鏄剧ず鍚堝苟鎸夐挳
                 if enabled_count > 0 || self.state.needs_remerge {
-                    // 如果需要重新合并，显示"重新合并"按钮并使用不同颜色
-                    ui.push_id("remerge_button", |ui| {
-                        // 获取状态颜色
-                        let (_success_color, _warning_color, _error_color, _info_color) =
+                    // 濡傛灉闇€瑕侀噸鏂板悎骞讹紝鏄剧ず"閲嶆柊鍚堝苟"鎸夐挳骞朵娇鐢ㄤ笉鍚岄鑹?                    ui.push_id("remerge_button", |ui| {
+                        // 鑾峰彇鐘舵€侀鑹?                        let (_success_color, _warning_color, _error_color, _info_color) =
                             crate::models::ThemeManager::get_status_colors();
                         
-                        // 如果正在合并中，显示进度动画
+                        // 濡傛灉姝ｅ湪鍚堝苟涓紝鏄剧ず杩涘害鍔ㄧ敾
                         if self.state.is_merging {
-                            let text = format!("合并中{}", ".".repeat(((self.state.merge_progress_anim / 10) % 4) as usize));
+                            let text = format!("鍚堝苟涓瓄}", ".".repeat(((self.state.merge_progress_anim / 10) % 4) as usize));
                             ui.add(egui::ProgressBar::new(self.state.merge_progress)
                                 .text(RichText::new(text).color(Color32::LIGHT_BLUE))
                                 .fill(Color32::LIGHT_BLUE)
                                 .animate(true));
                         } else {
                             let button_text = if self.state.needs_remerge {
-                                RichText::new("重新合并").color(Color32::LIGHT_BLUE)
+                                RichText::new("閲嶆柊鍚堝苟").color(Color32::LIGHT_BLUE)
                             } else {
-                                RichText::new("应用到MO文件").color(Color32::LIGHT_BLUE)
+                                RichText::new("搴旂敤鍒癕O鏂囦欢").color(Color32::LIGHT_BLUE)
                             };
                             
-                            let button = egui::Button::new(button_text)
-                                .min_size(egui::vec2(130.0, 28.0));
-                                
-                            if ui.add(button).clicked() {
-                                // 设置合并状态并启动线程
+                            if ui.add(button_text)
+                                .min_size(egui::vec2(130.0, 28.0)))
+                                .clicked() {
+                                // 璁剧疆鍚堝苟鐘舵€佸苟鍚姩绾跨▼
                                 self.state.is_merging = true;
                                 self.state.merge_progress = 0.0;
                                 self.state.merge_progress_anim = 0;
                                 
-                                // 在线程中执行合并，以避免UI冻结
+                                // 鍦ㄧ嚎绋嬩腑鎵ц鍚堝苟锛屼互閬垮厤UI鍐荤粨
                                 let tx = self.merge_tx.clone();
                                 let po_files: Vec<PathBuf> = self.state.installed_mods.iter()
                                     .filter(|m| m.status == ModStatus::Enabled)
@@ -687,10 +653,9 @@ impl App {
                                 let ignore_main = self.state.ignore_main_mo_entries;
                                 
                                 self.thread_pool.spawn(move || {
-                                    // 通知开始
-                                    let _ = tx.send(MergeStatus::Started);
+                                    // 閫氱煡寮€濮?                                    let _ = tx.send(MergeStatus::Started);
                                     
-                                    // 创建缓存目录
+                                    // 鍒涘缓缂撳瓨鐩綍
                                     let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
                                         local_dir.join("BLMM").join("cache")
                                     } else {
@@ -698,27 +663,26 @@ impl App {
                                     };
                                     
                                     if let Err(e) = std::fs::create_dir_all(&cache_dir) {
-                                        let _ = tx.send(MergeStatus::Failed(format!("创建缓存目录失败: {}", e)));
+                                        let _ = tx.send(MergeStatus::Failed(format!("鍒涘缓缂撳瓨鐩綍澶辫触: {}", e)));
                                         return;
                                     }
                                     
-                                    // 缓存合并PO的路径
-                                    let cached_po_path = cache_dir.join("cached_merged.po");
+                                    // 缂撳瓨鍚堝苟PO鐨勮矾寰?                                    let cached_po_path = cache_dir.join("cached_merged.po");
                                     
-                                    // 更新进度 25%
+                                    // 鏇存柊杩涘害 25%
                                     let _ = tx.send(MergeStatus::Progress(0.25));
                                     
-                                    // 合并PO文件
+                                    // 鍚堝苟PO鏂囦欢
                                     match po_merger::merge_po_files(&po_files, &cached_po_path, ignore_main) {
                                         Ok(_) => {
-                                            // 更新进度 75%
+                                            // 鏇存柊杩涘害 75%
                                             let _ = tx.send(MergeStatus::Progress(0.75));
                                             
-                                            // 完成
+                                            // 瀹屾垚
                                             let _ = tx.send(MergeStatus::Completed(cached_po_path));
                                         },
                                         Err(e) => {
-                                            let _ = tx.send(MergeStatus::Failed(format!("合并PO文件失败: {}", e)));
+                                            let _ = tx.send(MergeStatus::Failed(format!("鍚堝苟PO鏂囦欢澶辫触: {}", e)));
                                         }
                                     }
                                 });
@@ -732,32 +696,29 @@ impl App {
         // Table header
         ui.horizontal(|ui| {
             ui.add_space(30.0); // Checkbox column
-            ui.label("语言包名称").on_hover_text("按名称排序");
+            ui.label("璇█鍖呭悕绉?).on_hover_text("鎸夊悕绉版帓搴?);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                ui.label("优先级 ▼").on_hover_text("数字越小优先级越高，优先级高的翻译将覆盖优先级低的翻译");
-                ui.label("版本");
-                ui.label("类别");
+                ui.label("浼樺厛绾?鈻?).on_hover_text("鏁板瓧瓒婂皬浼樺厛绾ц秺楂橈紝浼樺厛绾ч珮鐨勭炕璇戝皢瑕嗙洊浼樺厛绾т綆鐨勭炕璇?);
+                ui.label("鐗堟湰");
+                ui.label("绫诲埆");
             });
         });
 
         ui.separator();
 
-        // 计算合适的高度，保留足够空间给日志区域
+        // 璁＄畻鍚堥€傜殑楂樺害锛屼繚鐣欒冻澶熺┖闂寸粰鏃ュ織鍖哄煙
         let available_height = ui.available_height();
-        // 留出日志区域高度（如果日志可见）
+        // 鐣欏嚭鏃ュ織鍖哄煙楂樺害锛堝鏋滄棩蹇楀彲瑙侊級
         let log_area_height = if self.state.show_logs { 220.0 } else { 0.0 };
-        let mods_list_height = available_height - log_area_height - 40.0; // 额外留出一些空间给UI元素
+        let mods_list_height = available_height - log_area_height - 40.0; // 棰濆鐣欏嚭涓€浜涚┖闂寸粰UI鍏冪礌
 
         // Mods list
         let mut to_enable = None;
         let mut to_disable = None;
         let mut to_uninstall = None;
 
-        // 拖放功能已移除
-        // 根据用户要求，已删除拖拽安装PO文件的功能
-
-        // 如果没有mods，显示一个提示区域
-        if self.state.installed_mods.is_empty() {
+        // 鎷栨斁鍔熻兘宸茬Щ闄?        // 鏍规嵁鐢ㄦ埛瑕佹眰锛屽凡鍒犻櫎鎷栨嫿瀹夎PO鏂囦欢鐨勫姛鑳?
+        // 濡傛灉娌℃湁mods锛屾樉绀轰竴涓彁绀哄尯鍩?        if self.state.installed_mods.is_empty() {
             let available_rect = ui.available_rect_before_wrap();
             let empty_area_rect = egui::Rect::from_min_size(
                 available_rect.min,
@@ -781,12 +742,12 @@ impl App {
             painter.text(
                 rect.center(),
                 egui::Align2::CENTER_CENTER,
-                "点击上方\"安装语言包\"按钮添加语言包",
+                "鐐瑰嚮涓婃柟\"瀹夎璇█鍖匼"鎸夐挳娣诲姞璇█鍖?,
                 egui::TextStyle::Body.resolve(ui.style()),
                 Color32::from_rgb(180, 180, 180)
             );
         } else {
-            // 如果有mods，显示一个可滚动列表
+            // 濡傛灉鏈塵ods锛屾樉绀轰竴涓彲婊氬姩鍒楄〃
             ui.push_id("mods_list_scroll", |ui| {
                 egui::ScrollArea::vertical().max_height(mods_list_height).show(ui, |ui| {
                     let mut move_up_index = None;
@@ -798,16 +759,14 @@ impl App {
                                 // Checkbox for enabled/disabled
                                 let mut is_enabled = mod_info.status == ModStatus::Enabled;
                                 
-                                // 使用on_change来检测复选框状态变化
-                                if ui.checkbox(&mut is_enabled, "").changed() {
-                                    // 只有当状态确实发生变化时才添加到待处理队列
-                                    if is_enabled {
+                                // 浣跨敤on_change鏉ユ娴嬪閫夋鐘舵€佸彉鍖?                                if ui.checkbox(&mut is_enabled, "").changed() {
+                                    // 鍙湁褰撶姸鎬佺‘瀹炲彂鐢熷彉鍖栨椂鎵嶆坊鍔犲埌寰呭鐞嗛槦鍒?                                    if is_enabled {
                                         to_enable = Some(index);
                                     } else {
                                         to_disable = Some(index);
                                     }
                                     
-                                    // 直接在此处设置needs_remerge标志
+                                    // 鐩存帴鍦ㄦ澶勮缃畁eeds_remerge鏍囧織
                                     self.state.needs_remerge = true;
                                 }
 
@@ -817,29 +776,23 @@ impl App {
 
                                 // Right side of the row
                                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                    // 添加上下移动按钮
+                                    // 娣诲姞涓婁笅绉诲姩鎸夐挳
                                     let can_move_down = index < self.state.installed_mods.len() - 1;
                                     let can_move_up = index > 0;
                                     
-                                    if ui.add_enabled(can_move_down, egui::Button::new("▼")).clicked() {
-                                        // 下移
+                                    if ui.add_enabled(can_move_down, egui::Button::new("鈻?)).clicked() {
+                                        // 涓嬬Щ
                                         move_down_index = Some(index);
                                     }
                                     
-                                    if ui.add_enabled(can_move_up, egui::Button::new("▲")).clicked() {
-                                        // 上移
+                                    if ui.add_enabled(can_move_up, egui::Button::new("鈻?)).clicked() {
+                                        // 涓婄Щ
                                         move_up_index = Some(index);
                                     }
                                     
                                     ui.label(format!("{}", index)); // Priority
                                     ui.label(mod_info.version.as_deref().unwrap_or("1.0.0")); // Version
-                                    
-                                    // Display original file type if available, otherwise use description or default
-                                    if let Some(orig_type) = &mod_info.original_type {
-                                        ui.label(format!("从{}转换的PO文件", orig_type));
-                                    } else {
-                                        ui.label(mod_info.description.as_deref().unwrap_or("语言包")); // Category
-                                    }
+                                    ui.label(mod_info.description.as_deref().unwrap_or("璇█鍖?)); // Category
                                 });
                             });
 
@@ -850,15 +803,15 @@ impl App {
 
                             // Context menu
                             row_response.response.context_menu(|ui| {
-                                if ui.button("重命名").clicked() {
-                                    // 打开重命名对话框
+                                if ui.button("閲嶅懡鍚?).clicked() {
+                                    // 鎵撳紑閲嶅懡鍚嶅璇濇
                                     let mod_name = self.state.installed_mods[index].name.clone();
                                     self.state.rename_mod_index = Some(index);
                                     self.state.rename_mod_name = mod_name;
                                     ui.close_menu();
                                 }
                                 
-                                if ui.button("卸载").clicked() {
+                                if ui.button("鍗歌浇").clicked() {
                                     to_uninstall = Some(index);
                                     ui.close_menu();
                                 }
@@ -868,8 +821,7 @@ impl App {
                         ui.separator();
                     }
                     
-                    // 处理优先级移动操作
-                    if let Some(index) = move_up_index {
+                    // 澶勭悊浼樺厛绾хЩ鍔ㄦ搷浣?                    if let Some(index) = move_up_index {
                         if index > 0 {
                             self.state.installed_mods.swap(index, index - 1);
                             self.state.needs_remerge = true;
@@ -899,22 +851,22 @@ impl App {
             self.uninstall_mod(index);
         }
 
-        // 显示日志区域（如果启用）
+        // 鏄剧ず鏃ュ織鍖哄煙锛堝鏋滃惎鐢級
         if self.state.show_logs {
             ui.separator();
             ui.horizontal(|ui| {
-                ui.heading("日志");
-                if ui.button("清空").clicked() {
+                ui.heading("鏃ュ織");
+                if ui.button("娓呯┖").clicked() {
                     self.state.logs.clear();
                 }
                 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.text_edit_singleline(&mut self.search_text).on_hover_text("搜索日志");
-                    ui.label("搜索:");
+                    ui.text_edit_singleline(&mut self.search_text).on_hover_text("鎼滅储鏃ュ織");
+                    ui.label("鎼滅储:");
                     
-                    if ui.button(if self.state.show_logs { "隐藏日志" } else { "显示日志" }).clicked() {
+                    if ui.button(if self.state.show_logs { "闅愯棌鏃ュ織" } else { "鏄剧ず鏃ュ織" }).clicked() {
                         self.state.show_logs = !self.state.show_logs;
-                        // 保存配置
+                        // 淇濆瓨閰嶇疆
                         self.config.show_logs = self.state.show_logs;
                         self.config.save().ok();
                     }
@@ -943,17 +895,16 @@ impl App {
 
     // Get or create mods cache directory
     fn get_or_create_mods_cache_dir(&self) -> Option<PathBuf> {
-        // 使用 AppData\Local\BLMM\mods 目录作为默认目录
+        // 浣跨敤 AppData\Local\BLMM\mods 鐩綍浣滀负榛樿鐩綍
         let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
             local_dir.join("BLMM").join("mods")
         } else {
-            // 如果无法获取系统本地数据目录，使用临时目录
-            std::env::temp_dir().join("BLMM").join("mods")
+            // 濡傛灉鏃犳硶鑾峰彇绯荤粺鏈湴鏁版嵁鐩綍锛屼娇鐢ㄤ复鏃剁洰褰?            std::env::temp_dir().join("BLMM").join("mods")
         };
         
-        // 确保目录存在
+        // 纭繚鐩綍瀛樺湪
         if let Err(e) = std::fs::create_dir_all(&cache_dir) {
-            eprintln!("创建语言包缓存目录失败: {}", e);
+            eprintln!("鍒涘缓璇█鍖呯紦瀛樼洰褰曞け璐? {}", e);
             return None;
         }
         
@@ -963,60 +914,51 @@ impl App {
     // Generate the cached merged PO file from selected mods
     #[allow(dead_code)]
     fn generate_cached_merged_po(&mut self) {
-        // 该方法现在被线程化处理，这里不需要任何操作
-        // 所有逻辑都移到了点击事件和process_merge_status方法中
-    }
+        // 璇ユ柟娉曠幇鍦ㄨ绾跨▼鍖栧鐞嗭紝杩欓噷涓嶉渶瑕佷换浣曟搷浣?        // 鎵€鏈夐€昏緫閮界Щ鍒颁簡鐐瑰嚮浜嬩欢鍜宲rocess_merge_status鏂规硶涓?    }
 
     // Apply the cached merged PO file to the main MO file
     fn apply_merged_po_to_mo(&mut self) {
         // Check if we have main MO file and cached merged PO
         if self.state.main_mo_file.is_none() {
-            self.state.add_log("错误: 请先在设置中设置主MO文件");
+            self.state.add_log("閿欒: 璇峰厛鍦ㄨ缃腑璁剧疆涓籑O鏂囦欢");
             return;
         }
         
         if self.state.cached_merged_po.is_none() {
-            self.state.add_log("错误: 没有可用的合并PO缓存，请先点击'合并选中PO'");
+            self.state.add_log("閿欒: 娌℃湁鍙敤鐨勫悎骞禤O缂撳瓨锛岃鍏堢偣鍑?鍚堝苟閫変腑PO'");
             return;
         }
         
         let main_mo_file = self.state.main_mo_file.clone().unwrap();
         let cached_po_file = self.state.cached_merged_po.clone().unwrap();
         
-        // 使用 AppData\Local\BLMM\cache 目录
+        // 浣跨敤 AppData\Local\BLMM\cache 鐩綍
         let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
             local_dir.join("BLMM").join("cache")
         } else {
-            // 如果无法获取系统本地数据目录，使用临时目录
-            std::env::temp_dir().join("BLMM").join("cache")
+            // 濡傛灉鏃犳硶鑾峰彇绯荤粺鏈湴鏁版嵁鐩綍锛屼娇鐢ㄤ复鏃剁洰褰?            std::env::temp_dir().join("BLMM").join("cache")
         };
         
-        // 确保缓存目录存在
+        // 纭繚缂撳瓨鐩綍瀛樺湪
         if let Err(e) = std::fs::create_dir_all(&cache_dir) {
-            self.state.add_log(&format!("创建缓存目录失败: {}", e));
+            self.state.add_log(&format!("鍒涘缓缂撳瓨鐩綍澶辫触: {}", e));
             return;
         }
         
-        // Create output MO file path - 使用用户设置的输出目录或桌面上的"BLMM导出"文件夹
-        let output_mo_path = if let Some(output_dir) = &self.state.output_directory {
-            // 使用用户设置的输出目录
-            if let Err(e) = std::fs::create_dir_all(output_dir) {
-                self.state.add_log(&format!("创建输出目录失败: {}", e));
-                // 如果创建目录失败，回退到桌面上的"BLMM导出"文件夹
-                self.create_default_output_directory()
+        // Create output MO file path - 浣跨敤鐢ㄦ埛璁剧疆鐨勮緭鍑虹洰褰曟垨妗岄潰涓婄殑"BLMM瀵煎嚭"鏂囦欢澶?        let output_mo_path = if let Some(output_dir) = &self.state.output_directory {
+            // 浣跨敤鐢ㄦ埛璁剧疆鐨勮緭鍑虹洰褰?            if let Err(e) = std::fs::create_dir_all(output_dir) {
+                self.state.add_log(&format!("鍒涘缓杈撳嚭鐩綍澶辫触: {}", e));
+                // 濡傛灉鍒涘缓鐩綍澶辫触锛屽洖閫€鍒版闈笂鐨?BLMM瀵煎嚭"鏂囦欢澶?                self.create_default_output_directory()
                     .map(|dir| dir.join("blender.mo"))
                     .unwrap_or_else(|| cache_dir.join("blender.mo"))
             } else {
-                // 使用设置的输出目录
-                output_dir.join("blender.mo")
+                // 浣跨敤璁剧疆鐨勮緭鍑虹洰褰?                output_dir.join("blender.mo")
             }
         } else {
-            // 未设置输出目录，使用桌面上的"BLMM导出"文件夹
-            self.create_default_output_directory()
+            // 鏈缃緭鍑虹洰褰曪紝浣跨敤妗岄潰涓婄殑"BLMM瀵煎嚭"鏂囦欢澶?            self.create_default_output_directory()
                 .map(|dir| dir.join("blender.mo"))
                 .unwrap_or_else(|| {
-                    // 如果创建桌面文件夹失败，回退到主MO文件所在目录
-                    if let Some(parent) = main_mo_file.parent() {
+                    // 濡傛灉鍒涘缓妗岄潰鏂囦欢澶瑰け璐ワ紝鍥為€€鍒颁富MO鏂囦欢鎵€鍦ㄧ洰褰?                    if let Some(parent) = main_mo_file.parent() {
                         parent.join("blender.mo")
                     } else {
                         cache_dir.join("blender.mo")
@@ -1026,69 +968,69 @@ impl App {
         
         // Convert the main MO file to PO first
         let main_po_path = cache_dir.join("main.po");
-        self.state.add_log("正在将主MO文件转换为PO格式...");
+        self.state.add_log("姝ｅ湪灏嗕富MO鏂囦欢杞崲涓篜O鏍煎紡...");
         
         match MoConverter::convert_mo_to_po(&main_mo_file, &main_po_path) {
             Ok(_) => {
-                self.state.add_log("主MO文件转换成功，准备与缓存PO合并...");
+                self.state.add_log("涓籑O鏂囦欢杞崲鎴愬姛锛屽噯澶囦笌缂撳瓨PO鍚堝苟...");
                 
                 // Merge main PO with cached PO
                 let all_po_files = vec![main_po_path.clone(), cached_po_file];
                 let final_merged_po = cache_dir.join("final_merged.po");
                 
-                // 记录是否使用了忽略主mo条目的选项
+                // 璁板綍鏄惁浣跨敤浜嗗拷鐣ヤ富mo鏉＄洰鐨勯€夐」
                 let ignore_msg = if self.state.ignore_main_mo_entries {
-                    "（已启用忽略主MO条目模式）"
+                    "锛堝凡鍚敤蹇界暐涓籑O鏉＄洰妯″紡锛?
                 } else {
                     ""
                 };
                 
                 match po_merger::merge_po_files(&all_po_files, &final_merged_po, self.state.ignore_main_mo_entries) {
                     Ok(_) => {
-                        self.state.add_log(&format!("最终PO文件合并成功{}，正在转换为MO格式...", ignore_msg));
+                        self.state.add_log(&format!("鏈€缁圥O鏂囦欢鍚堝苟鎴愬姛{}锛屾鍦ㄨ浆鎹负MO鏍煎紡...", ignore_msg));
                         
                         // Convert the final merged PO to MO
                         match PoConverter::convert_po_to_mo(&final_merged_po, &output_mo_path) {
                             Ok(_) => {
-                                // 获取输出目录用于日志显示
+                                // 鑾峰彇杈撳嚭鐩綍鐢ㄤ簬鏃ュ織鏄剧ず
                                 let output_dir = output_mo_path.parent()
-                                    .map_or_else(|| "[未知目录]".to_string(), 
+                                    .map_or_else(|| "[鏈煡鐩綍]".to_string(), 
                                                |dir| dir.to_string_lossy().to_string());
                                 let file_name = output_mo_path.file_name()
-                                    .map_or_else(|| "[未知文件]".to_string(), 
+                                    .map_or_else(|| "[鏈煡鏂囦欢]".to_string(), 
                                                |name| name.to_string_lossy().to_string());
-                                self.state.add_log(&format!("合并完成! 新MO文件已保存到: {}/{}", output_dir, file_name));
+                                self.state.add_log(&format!("鍚堝苟瀹屾垚! 鏂癕O鏂囦欢宸蹭繚瀛樺埌: {}/{}", output_dir, file_name));
                             },
                             Err(e) => {
-                                self.state.add_log(&format!("将合并后的PO转换为MO失败: {}", e));
+                                self.state.add_log(&format!("灏嗗悎骞跺悗鐨凱O杞崲涓篗O澶辫触: {}", e));
                             }
                         }
                     },
                     Err(e) => {
-                        self.state.add_log(&format!("最终PO文件合并失败: {}", e));
+                        self.state.add_log(&format!("鏈€缁圥O鏂囦欢鍚堝苟澶辫触: {}", e));
                     }
                 }
             },
             Err(e) => {
-                self.state.add_log(&format!("将主MO文件转换为PO失败: {}", e));
+                self.state.add_log(&format!("灏嗕富MO鏂囦欢杞崲涓篜O澶辫触: {}", e));
             }
         }
     }
 
-    // 创建默认的输出目录（桌面上的"BLMM导出"文件夹）
+    // 鍒涘缓榛樿鐨勮緭鍑虹洰褰曪紙妗岄潰涓婄殑"BLMM瀵煎嚭"鏂囦欢澶癸級
     fn create_default_output_directory(&mut self) -> Option<PathBuf> {
-        // 获取桌面路径
+        // 鑾峰彇妗岄潰璺緞
         let desktop_dir = dirs::desktop_dir()?;
-        let default_output_dir = desktop_dir.join("BLMM导出");
+        let default_output_dir = desktop_dir.join("BLMM瀵煎嚭");
         
-        // 尝试创建目录
+        // 灏濊瘯鍒涘缓鐩綍
         match std::fs::create_dir_all(&default_output_dir) {
             Ok(_) => {
-                self.state.add_log(&format!("已创建默认输出目录: {}", default_output_dir.to_string_lossy()));
+                self.state.add_log(&format!("宸插垱寤洪粯璁よ緭鍑虹洰褰? {}", default_output_dir.to_string_lossy()));
                 Some(default_output_dir)
             },
             Err(e) => {
-                self.state.add_log(&format!("创建默认输出目录失败: {}", e));
+                self.state.add_log(&format!("鍒涘缓榛樿杈撳嚭鐩綍澶辫触: {}", e));
                 None
             }
         }
@@ -1102,11 +1044,11 @@ impl App {
 
     fn render_install_dialog(&mut self, ctx: &egui::Context) {
         if self.show_install_dialog {
-            egui::Window::new("安装")
+            egui::Window::new("瀹夎")
                 .collapsible(false)
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        if ui.button("📁").clicked() {
+                        if ui.button("馃搧").clicked() {
                             if let Some(path) = rfd::FileDialog::new()
                                 .set_title("Choose Download Directory")
                                 .pick_folder() {
@@ -1130,7 +1072,7 @@ impl App {
                         }
                     });
 
-                    if ui.button("关闭").clicked() {
+                    if ui.button("鍏抽棴").clicked() {
                         self.show_install_dialog = false;
                     }
                 });
@@ -1138,31 +1080,30 @@ impl App {
     }
 
     fn render_package_tab(&mut self, ui: &mut Ui) {
-        ui.heading("语言包管理");
+        ui.heading("璇█鍖呯鐞?);
         
         ui.horizontal(|ui| {
-            if ui.button("浏览可用语言包").clicked() {
+            if ui.button("娴忚鍙敤璇█鍖?).clicked() {
                 // This would connect to a repository or show local packages
             }
             
-            if ui.button("更新语言包列表").clicked() {
+            if ui.button("鏇存柊璇█鍖呭垪琛?).clicked() {
                 // This would refresh available packages
             }
         });
         
         ui.separator();
         
-        ui.label("没有可用的语言包。请更新语言包列表或检查网络连接。");
+        ui.label("娌℃湁鍙敤鐨勮瑷€鍖呫€傝鏇存柊璇█鍖呭垪琛ㄦ垨妫€鏌ョ綉缁滆繛鎺ャ€?);
     }
 
     fn render_mod_settings(&mut self, ui: &mut Ui) {
-        // 获取主题的强调色
+        // 鑾峰彇涓婚鐨勫己璋冭壊
         let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
         
-        ui.heading(RichText::new("设置").color(accent_color));
+        ui.heading(RichText::new("璁剧疆").color(accent_color));
         
-        // 保存原始配置值，以检测更改
-        let orig_main_mo_file = self.state.main_mo_file.clone();
+        // 淇濆瓨鍘熷閰嶇疆鍊硷紝浠ユ娴嬫洿鏀?        let orig_main_mo_file = self.state.main_mo_file.clone();
         let orig_dark_mode = self.state.dark_mode;
         let orig_auto_batch = self.state.auto_batch;
         let orig_auto_close = self.state.auto_close;
@@ -1170,24 +1111,22 @@ impl App {
         let orig_ignore_main_mo_entries = self.state.ignore_main_mo_entries;
         let orig_theme = self.config.theme.clone();
         
-        // 添加主题设置部分
-        ui.collapsing("界面主题", |ui| {
+        // 娣诲姞涓婚璁剧疆閮ㄥ垎
+        ui.collapsing("鐣岄潰涓婚", |ui| {
             let theme_names = crate::models::ThemeManager::get_theme_names();
             
-            // 绘制主题选择按钮
+            // 缁樺埗涓婚閫夋嫨鎸夐挳
             ui.horizontal_wrapped(|ui| {
                 for (name, theme) in theme_names {
-                    // 设置按钮样式
+                    // 璁剧疆鎸夐挳鏍峰紡
                     let mut button = egui::Button::new(name);
                     
-                    // 根据主题类型设置不同的按钮颜色
-                    if self.config.theme == theme {
+                    // 鏍规嵁涓婚绫诲瀷璁剧疆涓嶅悓鐨勬寜閽鑹?                    if self.config.theme == theme {
                         button = button.fill(crate::models::ThemeManager::get_accent_color(&theme));
                     }
                     
-                    // 添加按钮并处理点击事件
-                    if ui.add(button).clicked() {
-                        self.config.theme = theme.clone();
+                    // 娣诲姞鎸夐挳骞跺鐞嗙偣鍑讳簨浠?                    if ui.add(button).clicked() {
+                        self.config.theme = theme;
                         self.state.dark_mode = theme != crate::models::AppTheme::Light 
                             && theme != crate::models::AppTheme::Sepia;
                     }
@@ -1197,152 +1136,141 @@ impl App {
         
         ui.separator();
         
-        // 主MO文件设置部分
-        ui.heading("基础MO文件");
+        // 涓籑O鏂囦欢璁剧疆閮ㄥ垎
+        ui.heading("鍩虹MO鏂囦欢");
         
         ui.horizontal(|ui| {
-            ui.label("主MO文件:");
+            ui.label("涓籑O鏂囦欢:");
             
             if let Some(mo_file) = &self.state.main_mo_file {
-                // 显示文件名
-                let file_name = mo_file.file_name()
+                // 鏄剧ず鏂囦欢鍚?                let file_name = mo_file.file_name()
                     .map(|f| f.to_string_lossy().to_string())
                     .unwrap_or_else(|| mo_file.display().to_string());
                 let response = ui.label(file_name);
                 
-                // 悬停时显示完整路径
-                let full_path = mo_file.to_string_lossy().to_string();
+                // 鎮仠鏃舵樉绀哄畬鏁磋矾寰?                let full_path = mo_file.to_string_lossy().to_string();
                 response.on_hover_text(full_path);
             } else {
-                ui.label("[未设置]");
+                ui.label("[鏈缃甝");
             }
             
-            if ui.button("选择MO文件").clicked() {
+            if ui.button("閫夋嫨MO鏂囦欢").clicked() {
                 if let Some(mo_path) = rfd::FileDialog::new()
-                    .add_filter("MO文件", &["mo"])
-                    .set_title("选择Blender的mo文件")
+                    .add_filter("MO鏂囦欢", &["mo"])
+                    .set_title("閫夋嫨Blender鐨刴o鏂囦欢")
                     .pick_file() {
                     
-                    // 保存主MO文件路径
+                    // 淇濆瓨涓籑O鏂囦欢璺緞
                     self.state.main_mo_file = Some(mo_path.clone());
                     self.config.main_mo_file = Some(mo_path.clone());
                     
-                    // 清除合并缓存，因为主MO文件已更改
-                    self.state.cached_merged_po = None;
+                    // 娓呴櫎鍚堝苟缂撳瓨锛屽洜涓轰富MO鏂囦欢宸叉洿鏀?                    self.state.cached_merged_po = None;
                     self.state.needs_remerge = true;
                     
-                    // 添加日志
-                    self.state.add_log(&format!("已设置主MO文件: {}", mo_path.display()));
-                    
-                    // 将文件克隆到BLMM文件夹
-                    self.clone_main_mo_to_blmm(&mo_path);
+                    // 娣诲姞鏃ュ織
+                    self.state.add_log(&format!("宸茶缃富MO鏂囦欢: {}", mo_path.display()));
                 }
             }
             
-            if ui.button("自动查找").clicked() {
+            if ui.button("鑷姩鏌ユ壘").clicked() {
                 self.auto_locate_blender_mo_file();
             }
             
-            if ui.button("清除").clicked() {
+            if ui.button("娓呴櫎").clicked() {
                 self.state.main_mo_file = None;
                 self.config.main_mo_file = None;
                 
-                // 清除合并缓存，因为主MO文件已更改
-                self.state.cached_merged_po = None;
+                // 娓呴櫎鍚堝苟缂撳瓨锛屽洜涓轰富MO鏂囦欢宸叉洿鏀?                self.state.cached_merged_po = None;
                 self.state.needs_remerge = true;
                 
-                self.state.add_log("已清除主MO文件设置");
+                self.state.add_log("宸叉竻闄や富MO鏂囦欢璁剧疆");
             }
         });
         
-        // 添加导出基础MO文件的按钮和说明
+        // 娣诲姞瀵煎嚭鍩虹MO鏂囦欢鐨勬寜閽拰璇存槑
         ui.horizontal(|ui| {
-            if ui.button("导出基础文件").clicked() {
+            if ui.button("瀵煎嚭鍩虹鏂囦欢").clicked() {
                 self.export_base_mo_file();
             }
-            ui.label("(将当前的基础MO文件导出为独立文件，不做任何合并)");
+            ui.label("(灏嗗綋鍓嶇殑鍩虹MO鏂囦欢瀵煎嚭涓虹嫭绔嬫枃浠讹紝涓嶅仛浠讳綍鍚堝苟)");
         });
         
         ui.add_space(4.0);
         
         ui.horizontal(|ui| {
-            ui.label("主MO文件描述:").on_hover_text("主MO文件是Blender的原始翻译文件，通常位于Blender安装目录的'datafiles/locale/zh_CN/LC_MESSAGES/'下，名为'blender.mo'");
+            ui.label("涓籑O鏂囦欢鎻忚堪:").on_hover_text("涓籑O鏂囦欢鏄疊lender鐨勫師濮嬬炕璇戞枃浠讹紝閫氬父浣嶄簬Blender瀹夎鐩綍鐨?datafiles/locale/zh_CN/LC_MESSAGES/'涓嬶紝鍚嶄负'blender.mo'");
         });
         
         ui.separator();
         
-        // 输出目录设置部分
-        ui.heading("输出设置");
+        // 杈撳嚭鐩綍璁剧疆閮ㄥ垎
+        ui.heading("杈撳嚭璁剧疆");
         
         ui.horizontal(|ui| {
-            ui.label("输出目录:");
+            ui.label("杈撳嚭鐩綍:");
             
             if let Some(output_dir) = &self.state.output_directory {
-                // 显示目录名
-                let dir_name = output_dir.display().to_string();
+                // 鏄剧ず鐩綍鍚?                let dir_name = output_dir.display().to_string();
                 let response = ui.label(dir_name);
                 
-                // 悬停时显示完整路径
-                let full_path = output_dir.to_string_lossy().to_string();
+                // 鎮仠鏃舵樉绀哄畬鏁磋矾寰?                let full_path = output_dir.to_string_lossy().to_string();
                 response.on_hover_text(full_path);
             } else {
-                ui.label("[未设置 - 将使用桌面上的\"BLMM导出\"文件夹]");
+                ui.label("[鏈缃?- 灏嗕娇鐢ㄦ闈笂鐨刓"BLMM瀵煎嚭\"鏂囦欢澶筣");
             }
             
-            if ui.button("选择输出目录").clicked() {
+            if ui.button("閫夋嫨杈撳嚭鐩綍").clicked() {
                 if let Some(dir) = rfd::FileDialog::new()
-                    .set_title("选择输出目录")
+                    .set_title("閫夋嫨杈撳嚭鐩綍")
                     .pick_folder() {
                         self.state.output_directory = Some(dir.clone());
                         self.config.output_directory = Some(dir.clone());
-                        self.state.add_log(&format!("已设置输出目录: {}", dir.display()));
+                        self.state.add_log(&format!("宸茶缃緭鍑虹洰褰? {}", dir.display()));
                     }
             }
             
-            if ui.button("清除").clicked() {
+            if ui.button("娓呴櫎").clicked() {
                 self.state.output_directory = None;
                 self.config.output_directory = None;
-                self.state.add_log("已清除输出目录设置，将使用桌面上的\"BLMM导出\"文件夹");
+                self.state.add_log("宸叉竻闄よ緭鍑虹洰褰曡缃紝灏嗕娇鐢ㄦ闈笂鐨刓"BLMM瀵煎嚭\"鏂囦欢澶?);
             }
         });
         
-        // 添加默认输出目录说明
+        // 娣诲姞榛樿杈撳嚭鐩綍璇存槑
         ui.add_space(4.0);
-        ui.label("提示: 未设置输出目录时，将默认在桌面上创建\"BLMM导出\"文件夹，并将合并后的MO文件保存到此处。");
+        ui.label("鎻愮ず: 鏈缃緭鍑虹洰褰曟椂锛屽皢榛樿鍦ㄦ闈笂鍒涘缓\"BLMM瀵煎嚭\"鏂囦欢澶癸紝骞跺皢鍚堝苟鍚庣殑MO鏂囦欢淇濆瓨鍒版澶勩€?);
         
         ui.separator();
         
-        // 常用设置部分
-        ui.heading("常用设置");
+        // 甯哥敤璁剧疆閮ㄥ垎
+        ui.heading("甯哥敤璁剧疆");
         
         ui.horizontal(|ui| {
-            ui.checkbox(&mut self.state.auto_batch, "自动批处理");
-            ui.checkbox(&mut self.state.auto_close, "处理完成后关闭");
+            ui.checkbox(&mut self.state.auto_batch, "鑷姩鎵瑰鐞?);
+            ui.checkbox(&mut self.state.auto_close, "澶勭悊瀹屾垚鍚庡叧闂?);
         });
         
-        ui.checkbox(&mut self.state.show_logs, "显示日志窗口");
+        ui.checkbox(&mut self.state.show_logs, "鏄剧ず鏃ュ織绐楀彛");
         
-        // 高级设置部分
-        ui.collapsing("高级设置", |ui| {
-            // 新增选项: 忽略主MO合并
-            ui.checkbox(&mut self.state.ignore_main_mo_entries, "忽略主mo合并")
-                .on_hover_text("启用后，语言包中与主MO文件重复的条目将被忽略，保留主MO文件中的原始翻译");
+        // 楂樼骇璁剧疆閮ㄥ垎
+        ui.collapsing("楂樼骇璁剧疆", |ui| {
+            // 鏂板閫夐」: 蹇界暐涓籑O鍚堝苟
+            ui.checkbox(&mut self.state.ignore_main_mo_entries, "蹇界暐涓籱o鍚堝苟")
+                .on_hover_text("鍚敤鍚庯紝璇█鍖呬腑涓庝富MO鏂囦欢閲嶅鐨勬潯鐩皢琚拷鐣ワ紝淇濈暀涓籑O鏂囦欢涓殑鍘熷缈昏瘧");
             
             ui.horizontal(|ui| {
-                ui.label(format!("线程池: {} 线程", num_cpus::get()));
+                ui.label(format!("绾跨▼姹? {} 绾跨▼", num_cpus::get()));
             });
         });
         
-        // 检查配置是否有变更，如果有则保存
-        if orig_main_mo_file != self.state.main_mo_file ||
+        // 妫€鏌ラ厤缃槸鍚︽湁鍙樻洿锛屽鏋滄湁鍒欎繚瀛?        if orig_main_mo_file != self.state.main_mo_file ||
            orig_dark_mode != self.state.dark_mode ||
            orig_auto_batch != self.state.auto_batch ||
            orig_auto_close != self.state.auto_close ||
            orig_show_logs != self.state.show_logs ||
            orig_ignore_main_mo_entries != self.state.ignore_main_mo_entries ||
            orig_theme != self.config.theme {
-            // 保存设置到配置文件
-            self.config.main_mo_file = self.state.main_mo_file.clone();
+            // 淇濆瓨璁剧疆鍒伴厤缃枃浠?            self.config.main_mo_file = self.state.main_mo_file.clone();
             self.config.dark_mode = self.state.dark_mode;
             self.config.auto_batch = self.state.auto_batch;
             self.config.auto_close = self.state.auto_close;
@@ -1350,94 +1278,89 @@ impl App {
             self.config.ignore_main_mo_entries = self.state.ignore_main_mo_entries;
             
             if let Err(e) = self.config.save() {
-                self.state.add_log(&format!("无法保存配置: {}", e));
+                self.state.add_log(&format!("鏃犳硶淇濆瓨閰嶇疆: {}", e));
             }
         }
     }
 
-    // 安装新语言包
-    fn install_new_mod(&mut self) {
-        // 获取或创建MOD缓存目录
+    // 瀹夎鏂拌瑷€鍖?    fn install_new_mod(&mut self) {
+        // 鑾峰彇鎴栧垱寤篗OD缂撳瓨鐩綍
         let mods_dir = self.get_or_create_mods_cache_dir();
         if mods_dir.is_none() {
-            self.state.add_log("错误: 无法创建语言包缓存目录");
+            self.state.add_log("閿欒: 鏃犳硶鍒涘缓璇█鍖呯紦瀛樼洰褰?);
             return;
         }
         
         let mods_dir = mods_dir.unwrap();
         
-        // 自动设置mods_directory到固定的缓存目录
+        // 鑷姩璁剧疆mods_directory鍒板浐瀹氱殑缂撳瓨鐩綍
         self.state.mods_directory = Some(mods_dir.clone());
         self.config.mods_directory = Some(mods_dir.clone());
         
-        // 打开文件选择对话框，允许多选，同时支持PO和CSV文件
+        // 鎵撳紑鏂囦欢閫夋嫨瀵硅瘽妗嗭紝鍏佽澶氶€夛紝鍚屾椂鏀寔PO鍜孋SV鏂囦欢
         if let Some(files) = rfd::FileDialog::new()
-            .add_filter("翻译文件", &["po", "csv"])
-            .add_filter("PO文件", &["po"])
-            .add_filter("CSV文件", &["csv"])
-            .set_title("选择要安装的翻译文件")
+            .add_filter("缈昏瘧鏂囦欢", &["po", "csv"])
+            .add_filter("PO鏂囦欢", &["po"])
+            .add_filter("CSV鏂囦欢", &["csv"])
+            .set_title("閫夋嫨瑕佸畨瑁呯殑缈昏瘧鏂囦欢")
             .pick_files() {
                 
             let files_count = files.len();
-            self.state.add_log(&format!("选择了 {} 个翻译文件准备安装", files_count));
+            self.state.add_log(&format!("閫夋嫨浜?{} 涓炕璇戞枃浠跺噯澶囧畨瑁?, files_count));
             
-            // 记录成功安装的文件数量
-            let mut success_count = 0;
+            // 璁板綍鎴愬姛瀹夎鐨勬枃浠舵暟閲?            let mut success_count = 0;
             
-            // 创建临时缓存目录用于CSV转换
+            // 鍒涘缓涓存椂缂撳瓨鐩綍鐢ㄤ簬CSV杞崲
             let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
                 local_dir.join("BLMM").join("cache")
             } else {
                 std::env::temp_dir().join("BLMM").join("cache")
             };
             
-            // 确保缓存目录存在
+            // 纭繚缂撳瓨鐩綍瀛樺湪
             if let Err(e) = std::fs::create_dir_all(&cache_dir) {
-                self.state.add_log(&format!("创建缓存目录失败: {}", e));
+                self.state.add_log(&format!("鍒涘缓缂撳瓨鐩綍澶辫触: {}", e));
                 return;
             }
             
-            // 处理每一个选择的文件
-            for file in files {
-                // 确定文件类型
+            // 澶勭悊姣忎竴涓€夋嫨鐨勬枃浠?            for file in files {
+                // 纭畾鏂囦欢绫诲瀷
                 let file_ext = file.extension().unwrap_or_default().to_string_lossy().to_lowercase();
                 
-                // 对于CSV文件，先转换为PO
+                // 瀵逛簬CSV鏂囦欢锛屽厛杞崲涓篜O
                 let processed_file = if file_ext == "csv" {
-                    self.state.add_log(&format!("检测到CSV文件: {}", file.display()));
+                    self.state.add_log(&format!("妫€娴嬪埌CSV鏂囦欢: {}", file.display()));
                     
-                    // 生成临时PO文件
+                    // 鐢熸垚涓存椂PO鏂囦欢
                     let temp_po_path = cache_dir.join(format!("temp_{}.po", SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .unwrap_or_default()
                         .as_secs()));
                     
-                    // 转换CSV到PO
+                    // 杞崲CSV鍒癙O
                     match CsvConverter::convert_csv_to_po(&file, &temp_po_path) {
                         Ok(_) => {
-                            self.state.add_log(&format!("成功将CSV转换为PO: {}", temp_po_path.display()));
+                            self.state.add_log(&format!("鎴愬姛灏咰SV杞崲涓篜O: {}", temp_po_path.display()));
                             temp_po_path
                         },
                         Err(e) => {
-                            self.state.add_log(&format!("CSV转换为PO失败: {}", e));
-                            continue;  // 跳过此文件
-                        }
+                            self.state.add_log(&format!("CSV杞崲涓篜O澶辫触: {}", e));
+                            continue;  // 璺宠繃姝ゆ枃浠?                        }
                     }
                 } else {
                     file.clone()
                 };
                 
-                // 创建新的MOD信息
+                // 鍒涘缓鏂扮殑MOD淇℃伅
                 let orig_file_name = file.file_name().unwrap_or_default().to_string_lossy().to_string();
                 let mut file_name = processed_file.file_name().unwrap_or_default().to_string_lossy().to_string();
                 
-                // 如果是从CSV转换的PO，给文件名加上标记
-                if file_ext == "csv" {
+                // 濡傛灉鏄粠CSV杞崲鐨凱O锛岀粰鏂囦欢鍚嶅姞涓婃爣璁?                if file_ext == "csv" {
                     let stem = orig_file_name.strip_suffix(".csv").unwrap_or(&orig_file_name);
                     file_name = format!("{}_from_csv.po", stem);
                 }
                 
-                // 检查是否已存在同名语言包，如果存在则添加"new"后缀
+                // 妫€鏌ユ槸鍚﹀凡瀛樺湪鍚屽悕璇█鍖咃紝濡傛灉瀛樺湪鍒欐坊鍔?new"鍚庣紑
                 let mut counter = 0;
                 let original_name = file_name.clone();
                 let stem = if let Some(pos) = original_name.rfind('.') {
@@ -1451,7 +1374,7 @@ impl App {
                     ""
                 };
                 
-                // 检查名称是否已存在，如果存在则添加"new"后缀
+                // 妫€鏌ュ悕绉版槸鍚﹀凡瀛樺湪锛屽鏋滃瓨鍦ㄥ垯娣诲姞"new"鍚庣紑
                 while self.state.installed_mods.iter().any(|m| m.name == file_name) || mods_dir.join(&file_name).exists() {
                     counter += 1;
                     if counter == 1 {
@@ -1463,72 +1386,48 @@ impl App {
                 
                 let mut mod_info = ModInfo::default();
                 mod_info.name = file_name.clone();
-                mod_info.status = ModStatus::Enabled; // 默认为启用状态
-                mod_info.install_date = Some(Local::now());
+                mod_info.status = ModStatus::Enabled; // 榛樿涓哄惎鐢ㄧ姸鎬?                mod_info.install_date = Some(Local::now());
                 
-                // 如果来自CSV，添加描述
-                if file_ext == "csv" {
-                    mod_info.description = Some("从CSV转换的PO文件".to_string());
-                    mod_info.original_type = Some("CSV".to_string());
+                // 濡傛灉鏉ヨ嚜CSV锛屾坊鍔犳弿杩?                if file_ext == "csv" {
+                    mod_info.description = Some("浠嶤SV杞崲鐨凱O鏂囦欢".to_string());
                 }
                 
-                // 将PO文件复制到MOD目录
+                // 灏哖O鏂囦欢澶嶅埗鍒癕OD鐩綍
                 let target_path = mods_dir.join(&file_name);
                 
-                // 尝试复制文件
+                // 灏濊瘯澶嶅埗鏂囦欢
                 match std::fs::copy(&processed_file, &target_path) {
                     Ok(_) => {
-                        mod_info.path = target_path.clone();
+                        mod_info.path = target_path;
                         
-                        // 在配置中保存该mod的启用状态
-                        self.config.saved_mods.insert(file_name.clone(), true);
-                        
-                        // 如果存在原始文件类型信息，创建元数据JSON文件
-                        if let Some(orig_type) = &mod_info.original_type {
-                            let metadata_path = target_path.with_extension("json");
-                            let metadata = serde_json::json!({
-                                "name": file_name,
-                                "original_type": orig_type,
-                                "install_date": chrono::Local::now().to_rfc3339()
-                            });
-                            
-                            // 将元数据写入JSON文件
-                            if let Ok(json_str) = serde_json::to_string_pretty(&metadata) {
-                                if let Err(e) = std::fs::write(&metadata_path, json_str) {
-                                    self.state.add_log(&format!("无法写入元数据文件: {}", e));
-                                }
-                            }
-                        }
+                        // 鍦ㄩ厤缃腑淇濆瓨璇od鐨勫惎鐢ㄧ姸鎬?                        self.config.saved_mods.insert(file_name.clone(), true);
                         
                         self.state.installed_mods.push(mod_info);
                         
-                        // 标记需要重新合并
-                        self.state.needs_remerge = true;
+                        // 鏍囪闇€瑕侀噸鏂板悎骞?                        self.state.needs_remerge = true;
                         
-                        // 如果文件名被修改，添加相应日志
-                        if file_name != original_name {
-                            self.state.add_log(&format!("检测到同名语言包，已重命名为: {}", file_name));
+                        // 濡傛灉鏂囦欢鍚嶈淇敼锛屾坊鍔犵浉搴旀棩蹇?                        if file_name != original_name {
+                            self.state.add_log(&format!("妫€娴嬪埌鍚屽悕璇█鍖咃紝宸查噸鍛藉悕涓? {}", file_name));
                         }
                         
-                        // 显示成功信息，区分CSV和PO
+                        // 鏄剧ず鎴愬姛淇℃伅锛屽尯鍒咰SV鍜孭O
                         if file_ext == "csv" {
-                            self.state.add_log(&format!("成功将CSV文件转换并安装为语言包: {}", file_name));
+                            self.state.add_log(&format!("鎴愬姛灏咰SV鏂囦欢杞崲骞跺畨瑁呬负璇█鍖? {}", file_name));
                         } else {
-                            self.state.add_log(&format!("成功安装语言包: {}", file_name));
+                            self.state.add_log(&format!("鎴愬姛瀹夎璇█鍖? {}", file_name));
                         }
                         
                         success_count += 1;
                         
-                        // 如果是临时文件，安装后删除
-                        if file_ext == "csv" {
+                        // 濡傛灉鏄复鏃舵枃浠讹紝瀹夎鍚庡垹闄?                        if file_ext == "csv" {
                             let _ = std::fs::remove_file(&processed_file);
                         }
                     },
                     Err(e) => {
                         let file_display = file.file_name().unwrap_or_default().to_string_lossy();
-                        self.state.add_log(&format!("语言包 {} 安装失败: {}", file_display, e));
+                        self.state.add_log(&format!("璇█鍖?{} 瀹夎澶辫触: {}", file_display, e));
                         
-                        // 如果是临时文件，安装失败也要删除
+                        // 濡傛灉鏄复鏃舵枃浠讹紝瀹夎澶辫触涔熻鍒犻櫎
                         if file_ext == "csv" {
                             let _ = std::fs::remove_file(&processed_file);
                         }
@@ -1536,38 +1435,36 @@ impl App {
                 }
             }
             
-            // 安装完成后更新配置并显示汇总信息
-            if success_count > 0 {
-                // 保存配置
+            // 瀹夎瀹屾垚鍚庢洿鏂伴厤缃苟鏄剧ず姹囨€讳俊鎭?            if success_count > 0 {
+                // 淇濆瓨閰嶇疆
                 self.config.save().ok();
                 
-                // 如果安装了多个文件，显示汇总信息
-                if files_count > 1 {
-                    self.state.add_log(&format!("批量安装完成：成功 {}/{}个语言包", success_count, files_count));
+                // 濡傛灉瀹夎浜嗗涓枃浠讹紝鏄剧ず姹囨€讳俊鎭?                if files_count > 1 {
+                    self.state.add_log(&format!("鎵归噺瀹夎瀹屾垚锛氭垚鍔?{}/{}涓瑷€鍖?, success_count, files_count));
                 }
             }
         }
     }
     
-    // 扫描MOD目录
+    // 鎵弿MOD鐩綍
     fn scan_mods_directory(&mut self) {
-        // 获取或创建MOD缓存目录
+        // 鑾峰彇鎴栧垱寤篗OD缂撳瓨鐩綍
         let mods_dir = self.get_or_create_mods_cache_dir();
         if mods_dir.is_none() {
-            self.state.add_log("错误: 无法创建语言包缓存目录");
+            self.state.add_log("閿欒: 鏃犳硶鍒涘缓璇█鍖呯紦瀛樼洰褰?);
             return;
         }
         
         let mods_dir = mods_dir.unwrap();
         
-        // 自动设置mods_directory到固定的缓存目录
+        // 鑷姩璁剧疆mods_directory鍒板浐瀹氱殑缂撳瓨鐩綍
         self.state.mods_directory = Some(mods_dir.clone());
         self.config.mods_directory = Some(mods_dir.clone());
         
-        // 清空当前MOD列表
+        // 娓呯┖褰撳墠MOD鍒楄〃
         self.state.installed_mods.clear();
         
-        // 扫描目录下的所有PO文件
+        // 鎵弿鐩綍涓嬬殑鎵€鏈塒O鏂囦欢
         match std::fs::read_dir(&mods_dir) {
             Ok(entries) => {
                 let mut found = false;
@@ -1576,47 +1473,29 @@ impl App {
                     if let Ok(entry) = entry {
                         let path = entry.path();
                         
-                        // 检查是否为PO文件
+                        // 妫€鏌ユ槸鍚︿负PO鏂囦欢
                         if path.is_file() && path.extension().map_or(false, |e| e == "po") {
                             found = true;
                             
-                            // 创建MOD信息
+                            // 鍒涘缓MOD淇℃伅
                             let file_name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
                             let mut mod_info = ModInfo::default();
                             mod_info.name = file_name.clone();
-                            mod_info.path = path.clone();
+                            mod_info.path = path;
                             
-                            // 尝试读取同名的json元数据文件
-                            let metadata_path = path.with_extension("json");
-                            if metadata_path.exists() {
-                                if let Ok(meta_content) = std::fs::read_to_string(&metadata_path) {
-                                    if let Ok(json) = serde_json::from_str::<serde_json::Value>(&meta_content) {
-                                        // 尝试获取原始文件类型
-                                        if let Some(orig_type) = json.get("original_type").and_then(|v| v.as_str()) {
-                                            mod_info.original_type = Some(orig_type.to_string());
-                                            if orig_type == "CSV" {
-                                                mod_info.description = Some("从CSV转换的PO文件".to_string());
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // 从配置中加载该mod的启用状态
-                            if let Some(enabled) = self.config.saved_mods.get(&file_name) {
+                            // 浠庨厤缃腑鍔犺浇璇od鐨勫惎鐢ㄧ姸鎬?                            if let Some(enabled) = self.config.saved_mods.get(&file_name) {
                                 mod_info.status = if *enabled {
                                     ModStatus::Enabled
                                 } else {
                                     ModStatus::Disabled
                                 };
                             } else {
-                                // 如果没有保存的状态，默认为启用
-                                mod_info.status = ModStatus::Enabled;
+                                // 濡傛灉娌℃湁淇濆瓨鐨勭姸鎬侊紝榛樿涓哄惎鐢?                                mod_info.status = ModStatus::Enabled;
                             }
                             
-                            // 获取文件信息
+                            // 鑾峰彇鏂囦欢淇℃伅
                             if let Ok(metadata) = std::fs::metadata(&mod_info.path) {
-                                // 尝试获取安装日期（基于文件创建时间）
+                                // 灏濊瘯鑾峰彇瀹夎鏃ユ湡锛堝熀浜庢枃浠跺垱寤烘椂闂达級
                                 if let Ok(created) = metadata.created() {
                                     if let Ok(duration) = created.duration_since(UNIX_EPOCH) {
                                         mod_info.install_date = Local.timestamp_opt(duration.as_secs() as i64, 0).single();
@@ -1624,96 +1503,89 @@ impl App {
                                 }
                             }
                             
-                            // 添加到MOD列表
+                            // 娣诲姞鍒癕OD鍒楄〃
                             self.state.installed_mods.push(mod_info);
                         }
                     }
                 }
                 
                 if found {
-                    self.state.add_log(&format!("扫描完成，发现 {} 个语言包", self.state.installed_mods.len()));
+                    self.state.add_log(&format!("鎵弿瀹屾垚锛屽彂鐜?{} 涓瑷€鍖?, self.state.installed_mods.len()));
                 } else {
-                    self.state.add_log("未在目录中找到任何PO语言包");
+                    self.state.add_log("鏈湪鐩綍涓壘鍒颁换浣昉O璇█鍖?);
                 }
                 
-                // 保存配置
+                // 淇濆瓨閰嶇疆
                 self.config.save().ok();
             },
             Err(e) => {
-                self.state.add_log(&format!("扫描语言包目录失败: {}", e));
+                self.state.add_log(&format!("鎵弿璇█鍖呯洰褰曞け璐? {}", e));
             }
         }
     }
     
-    // 启用MOD
+    // 鍚敤MOD
     fn enable_mod(&mut self, index: usize) {
         if index < self.state.installed_mods.len() {
             self.state.installed_mods[index].status = ModStatus::Enabled;
             let mod_name = &self.state.installed_mods[index].name;
             
-            // 在配置中保存该mod的启用状态
-            self.config.saved_mods.insert(mod_name.clone(), true);
+            // 鍦ㄩ厤缃腑淇濆瓨璇od鐨勫惎鐢ㄧ姸鎬?            self.config.saved_mods.insert(mod_name.clone(), true);
             self.config.save().ok();
             
-            // 标记需要重新合并
-            self.state.needs_remerge = true;
+            // 鏍囪闇€瑕侀噸鏂板悎骞?            self.state.needs_remerge = true;
             
-            self.state.add_log(&format!("已启用语言包: {}", mod_name));
+            self.state.add_log(&format!("宸插惎鐢ㄨ瑷€鍖? {}", mod_name));
         }
     }
     
-    // 禁用MOD
+    // 绂佺敤MOD
     fn disable_mod(&mut self, index: usize) {
         if index < self.state.installed_mods.len() {
             self.state.installed_mods[index].status = ModStatus::Disabled;
             let mod_name = &self.state.installed_mods[index].name;
             
-            // 在配置中保存该mod的禁用状态
-            self.config.saved_mods.insert(mod_name.clone(), false);
+            // 鍦ㄩ厤缃腑淇濆瓨璇od鐨勭鐢ㄧ姸鎬?            self.config.saved_mods.insert(mod_name.clone(), false);
             self.config.save().ok();
             
-            // 标记需要重新合并
-            self.state.needs_remerge = true;
+            // 鏍囪闇€瑕侀噸鏂板悎骞?            self.state.needs_remerge = true;
             
-            self.state.add_log(&format!("已禁用语言包: {}", mod_name));
+            self.state.add_log(&format!("宸茬鐢ㄨ瑷€鍖? {}", mod_name));
         }
     }
     
-    // 卸载MOD
+    // 鍗歌浇MOD
     fn uninstall_mod(&mut self, index: usize) {
         if index < self.state.installed_mods.len() {
             let mod_info = &self.state.installed_mods[index];
             let mod_name = mod_info.name.clone();
             
-            // 尝试删除文件
+            // 灏濊瘯鍒犻櫎鏂囦欢
             match std::fs::remove_file(&mod_info.path) {
                 Ok(_) => {
-                    // 从配置中移除该mod的状态记录
-                    self.config.saved_mods.remove(&mod_name);
+                    // 浠庨厤缃腑绉婚櫎璇od鐨勭姸鎬佽褰?                    self.config.saved_mods.remove(&mod_name);
                     self.config.save().ok();
                     
                     self.state.installed_mods.remove(index);
                     
-                    // 标记需要重新合并
-                    self.state.needs_remerge = true;
+                    // 鏍囪闇€瑕侀噸鏂板悎骞?                    self.state.needs_remerge = true;
                     
-                    self.state.add_log(&format!("已卸载语言包: {}", mod_name));
+                    self.state.add_log(&format!("宸插嵏杞借瑷€鍖? {}", mod_name));
                 },
                 Err(e) => {
-                    self.state.add_log(&format!("卸载语言包失败: {}", e));
+                    self.state.add_log(&format!("鍗歌浇璇█鍖呭け璐? {}", e));
                 }
             }
         }
     }
 
-    // 应用退出时保存配置
+    // 搴旂敤閫€鍑烘椂淇濆瓨閰嶇疆
     fn save_config_on_exit(&mut self) {
-        // 确保配置对象包含最新的状态
-        self.config.main_mo_file = self.state.main_mo_file.clone();
+        // 纭繚閰嶇疆瀵硅薄鍖呭惈鏈€鏂扮殑鐘舵€?        self.config.main_mo_file = self.state.main_mo_file.clone();
         self.config.mods_directory = self.state.mods_directory.clone();
         self.config.output_directory = self.state.output_directory.clone();
         
-        // 保持向后兼容的dark_mode设置
+        // 淇濇寔鍚戝悗鍏煎鐨刣ark_mode璁剧疆
         self.config.dark_mode = self.state.dark_mode;
         
         self.config.auto_batch = self.state.auto_batch;
@@ -1721,165 +1593,158 @@ impl App {
         self.config.show_logs = self.state.show_logs;
         self.config.ignore_main_mo_entries = self.state.ignore_main_mo_entries;
         
-        // 保存配置
+        // 淇濆瓨閰嶇疆
         if let Err(e) = self.config.save() {
-            self.state.add_log(&format!("退出时保存配置失败: {}", e));
+            self.state.add_log(&format!("閫€鍑烘椂淇濆瓨閰嶇疆澶辫触: {}", e));
         } else {
-            self.state.add_log("配置已保存");
+            self.state.add_log("閰嶇疆宸蹭繚瀛?);
         }
     }
 
-    // 将主MO文件复制到BLMM目录
+    // 灏嗕富MO鏂囦欢澶嶅埗鍒癇LMM鐩綍
     fn clone_main_mo_to_blmm(&mut self, original_mo_path: &PathBuf) -> Option<PathBuf> {
         use std::fs;
 
-        // 获取BLMM缓存目录
+        // 鑾峰彇BLMM缂撳瓨鐩綍
         let blmm_dir = if let Some(local_dir) = dirs::data_local_dir() {
             local_dir.join("BLMM")
         } else {
-            // 如果无法获取系统本地数据目录，使用临时目录
-            std::env::temp_dir().join("BLMM")
+            // 濡傛灉鏃犳硶鑾峰彇绯荤粺鏈湴鏁版嵁鐩綍锛屼娇鐢ㄤ复鏃剁洰褰?            std::env::temp_dir().join("BLMM")
         };
 
-        // 确保目录存在
+        // 纭繚鐩綍瀛樺湪
         if let Err(e) = fs::create_dir_all(&blmm_dir) {
-            self.state.add_log(&format!("创建BLMM目录失败: {}", e));
+            self.state.add_log(&format!("鍒涘缓BLMM鐩綍澶辫触: {}", e));
             return None;
         }
 
-        // 为MO文件创建一个新的路径
-        // 不再需要原始文件名，直接使用固定名称
-        let blmm_mo_path = blmm_dir.join("base_blender.mo");
+        // 涓篗O鏂囦欢鍒涘缓涓€涓柊鐨勮矾寰?        // 涓嶅啀闇€瑕佸師濮嬫枃浠跺悕锛岀洿鎺ヤ娇鐢ㄥ浐瀹氬悕绉?        let blmm_mo_path = blmm_dir.join("base_blender.mo");
 
-        // 复制文件
+        // 澶嶅埗鏂囦欢
         match fs::copy(original_mo_path, &blmm_mo_path) {
             Ok(_) => {
-                self.state.add_log(&format!("已将主MO文件复制到BLMM目录: {}", blmm_mo_path.display()));
+                self.state.add_log(&format!("宸插皢涓籑O鏂囦欢澶嶅埗鍒癇LMM鐩綍: {}", blmm_mo_path.display()));
                 Some(blmm_mo_path)
             },
             Err(e) => {
-                self.state.add_log(&format!("复制主MO文件到BLMM目录失败: {}", e));
+                self.state.add_log(&format!("澶嶅埗涓籑O鏂囦欢鍒癇LMM鐩綍澶辫触: {}", e));
                 None
             }
         }
     }
 
-    // 在process_conversion_results方法后添加新的方法处理合并进度
-    fn process_merge_status(&mut self) {
-        // 更新动画计数器
-        if self.state.is_merging {
+    // 鍦╬rocess_conversion_results鏂规硶鍚庢坊鍔犳柊鐨勬柟娉曞鐞嗗悎骞惰繘搴?    fn process_merge_status(&mut self) {
+        // 鏇存柊鍔ㄧ敾璁℃暟鍣?        if self.state.is_merging {
             self.state.merge_progress_anim += 1;
         }
         
-        // 检查是否有来自合并线程的消息
-        if let Ok(status) = self.merge_rx.try_recv() {
+        // 妫€鏌ユ槸鍚︽湁鏉ヨ嚜鍚堝苟绾跨▼鐨勬秷鎭?        if let Ok(status) = self.merge_rx.try_recv() {
             match status {
                 MergeStatus::Started => {
-                    self.state.add_log("开始合并PO文件...");
+                    self.state.add_log("寮€濮嬪悎骞禤O鏂囦欢...");
                 },
                 MergeStatus::Progress(progress) => {
                     self.state.merge_progress = progress;
-                    self.state.add_log(&format!("合并进度: {}%", (progress * 100.0) as i32));
+                    self.state.add_log(&format!("鍚堝苟杩涘害: {}%", (progress * 100.0) as i32));
                 },
                 MergeStatus::Completed(cached_path) => {
                     self.state.is_merging = false;
                     self.state.merge_progress = 1.0;
                     self.state.cached_merged_po = Some(cached_path.clone());
                     self.state.needs_remerge = false;
-                    self.state.add_log(&format!("PO文件合并成功，已生成缓存文件: {}", cached_path.display()));
-                    self.state.add_log("点击'应用到MO文件'将合并结果应用到主MO文件");
+                    self.state.add_log(&format!("PO鏂囦欢鍚堝苟鎴愬姛锛屽凡鐢熸垚缂撳瓨鏂囦欢: {}", cached_path.display()));
+                    self.state.add_log("鐐瑰嚮'搴旂敤鍒癕O鏂囦欢'灏嗗悎骞剁粨鏋滃簲鐢ㄥ埌涓籑O鏂囦欢");
                     
-                    // 如果缓存文件可用，则自动应用到MO文件
+                    // 濡傛灉缂撳瓨鏂囦欢鍙敤锛屽垯鑷姩搴旂敤鍒癕O鏂囦欢
                     if self.state.cached_merged_po.is_some() {
                         self.apply_merged_po_to_mo();
                     }
                 },
                 MergeStatus::Failed(error) => {
                     self.state.is_merging = false;
-                    self.state.add_log(&format!("合并失败: {}", error));
+                    self.state.add_log(&format!("鍚堝苟澶辫触: {}", error));
                 }
             }
         }
     }
 
-    // 专门用于显示帮助信息的函数
-    fn show_help_window(&mut self, ctx: &egui::Context) {
+    // 涓撻棬鐢ㄤ簬鏄剧ず甯姪淇℃伅鐨勫嚱鏁?    fn show_help_window(&mut self, ctx: &egui::Context) {
         if self.state.show_help {
-            egui::Window::new("使用帮助")
+            egui::Window::new("浣跨敤甯姪")
                 .collapsible(false)
                 .min_width(500.0)
                 .show(ctx, |ui| {
-                    ui.heading("Blender字典合并管理器 By:凌川雪");
-                    ui.label("使用帮助");
+                    ui.heading("Blender瀛楀吀鍚堝苟绠＄悊鍣?By:鍑屽窛闆?);
+                    ui.label("浣跨敤甯姪");
                     ui.separator();
                     
-                    ui.collapsing("基本使用流程", |ui| {
+                    ui.collapsing("鍩烘湰浣跨敤娴佺▼", |ui| {
                         ui.add_space(5.0);
                         
-                        ui.label("1. 设置 - 选择主MO文件和语言包目录");
-                        ui.label("   - 进入设置选项卡，设置Blender的主MO文件");
-                        ui.label("   - 设置存放PO语言包的目录");
+                        ui.label("1. 璁剧疆 - 閫夋嫨涓籑O鏂囦欢鍜岃瑷€鍖呯洰褰?);
+                        ui.label("   - 杩涘叆璁剧疆閫夐」鍗★紝璁剧疆Blender鐨勪富MO鏂囦欢");
+                        ui.label("   - 璁剧疆瀛樻斁PO璇█鍖呯殑鐩綍");
                         ui.add_space(5.0);
                         
-                        ui.label("2. 安装语言包");
-                        ui.label("   - 点击「安装语言包」按钮选择PO文件");
-                        ui.label("   - 安装后语言包会自动启用");
+                        ui.label("2. 瀹夎璇█鍖?);
+                        ui.label("   - 鐐瑰嚮銆屽畨瑁呰瑷€鍖呫€嶆寜閽€夋嫨PO鏂囦欢");
+                        ui.label("   - 瀹夎鍚庤瑷€鍖呬細鑷姩鍚敤");
                         ui.add_space(5.0);
                         
-                        ui.label("3. 管理语言包");
-                        ui.label("   - 勾选/取消勾选语言包以启用/禁用");
-                        ui.label("   - 使用▲▼按钮调整语言包优先级");
-                        ui.label("   - 优先级高的语言包翻译会覆盖优先级低的翻译");
+                        ui.label("3. 绠＄悊璇█鍖?);
+                        ui.label("   - 鍕鹃€?鍙栨秷鍕鹃€夎瑷€鍖呬互鍚敤/绂佺敤");
+                        ui.label("   - 浣跨敤鈻测柤鎸夐挳璋冩暣璇█鍖呬紭鍏堢骇");
+                        ui.label("   - 浼樺厛绾ч珮鐨勮瑷€鍖呯炕璇戜細瑕嗙洊浼樺厛绾т綆鐨勭炕璇?);
                         ui.add_space(5.0);
                         
-                        ui.label("4. 应用更改");
-                        ui.label("   - 修改语言包状态后点击「重新合并」按钮");
-                        ui.label("   - 等待处理完成后，将自动应用到MO文件");
+                        ui.label("4. 搴旂敤鏇存敼");
+                        ui.label("   - 淇敼璇█鍖呯姸鎬佸悗鐐瑰嚮銆岄噸鏂板悎骞躲€嶆寜閽?);
+                        ui.label("   - 绛夊緟澶勭悊瀹屾垚鍚庯紝灏嗚嚜鍔ㄥ簲鐢ㄥ埌MO鏂囦欢");
                     });
                     
-                    ui.collapsing("高级选项", |ui| {
-                        ui.label("- 在设置中可启用「忽略主mo合并」选项，保留原始MO翻译");
-                        ui.label("- 通过上下移动语言包调整优先级，高优先级的语言包翻译会覆盖低优先级的");
-                        ui.label("- 应用到MO文件后，需要重启Blender才能看到更改效果");
+                    ui.collapsing("楂樼骇閫夐」", |ui| {
+                        ui.label("- 鍦ㄨ缃腑鍙惎鐢ㄣ€屽拷鐣ヤ富mo鍚堝苟銆嶉€夐」锛屼繚鐣欏師濮婱O缈昏瘧");
+                        ui.label("- 閫氳繃涓婁笅绉诲姩璇█鍖呰皟鏁翠紭鍏堢骇锛岄珮浼樺厛绾х殑璇█鍖呯炕璇戜細瑕嗙洊浣庝紭鍏堢骇鐨?);
+                        ui.label("- 搴旂敤鍒癕O鏂囦欢鍚庯紝闇€瑕侀噸鍚疊lender鎵嶈兘鐪嬪埌鏇存敼鏁堟灉");
                     });
                     
-                    ui.collapsing("故障排除", |ui| {
-                        ui.label("如果合并失败:");
-                        ui.label("1. 检查主MO文件是否可读写");
-                        ui.label("2. 确保语言包是标准的PO格式");
-                        ui.label("3. 在日志区查看详细错误信息");
-                        ui.label("4. 尝试启用或禁用「忽略主mo合并」选项");
+                    ui.collapsing("鏁呴殰鎺掗櫎", |ui| {
+                        ui.label("濡傛灉鍚堝苟澶辫触:");
+                        ui.label("1. 妫€鏌ヤ富MO鏂囦欢鏄惁鍙鍐?);
+                        ui.label("2. 纭繚璇█鍖呮槸鏍囧噯鐨凱O鏍煎紡");
+                        ui.label("3. 鍦ㄦ棩蹇楀尯鏌ョ湅璇︾粏閿欒淇℃伅");
+                        ui.label("4. 灏濊瘯鍚敤鎴栫鐢ㄣ€屽拷鐣ヤ富mo鍚堝苟銆嶉€夐」");
                     });
                     
                     ui.separator();
                     
-                    if ui.button("关闭").clicked() {
+                    if ui.button("鍏抽棴").clicked() {
                         self.state.show_help = false;
                     }
                 });
         }
     }
 
-    // 重命名对话框
+    // 閲嶅懡鍚嶅璇濇
     fn render_rename_dialog(&mut self, ctx: &egui::Context) {
         if self.state.rename_mod_index.is_some() {
-            egui::Window::new("重命名语言包")
+            egui::Window::new("閲嶅懡鍚嶈瑷€鍖?)
                 .collapsible(false)
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label("新名称:");
+                        ui.label("鏂板悕绉?");
                         ui.text_edit_singleline(&mut self.state.rename_mod_name);
                     });
                     
                     ui.horizontal(|ui| {
-                        if ui.button("确定").clicked() {
+                        if ui.button("纭畾").clicked() {
                             if let Some(index) = self.state.rename_mod_index {
                                 self.rename_mod(index, self.state.rename_mod_name.clone());
                             }
                             self.state.rename_mod_index = None;
                         }
                         
-                        if ui.button("取消").clicked() {
+                        if ui.button("鍙栨秷").clicked() {
                             self.state.rename_mod_index = None;
                         }
                     });
@@ -1887,17 +1752,15 @@ impl App {
         }
     }
     
-    // 重命名语言包
-    fn rename_mod(&mut self, index: usize, new_name: String) {
+    // 閲嶅懡鍚嶈瑷€鍖?    fn rename_mod(&mut self, index: usize, new_name: String) {
         if index >= self.state.installed_mods.len() || new_name.trim().is_empty() {
             return;
         }
         
-        // 获取语言包目录
-        let mods_dir = match self.get_or_create_mods_cache_dir() {
+        // 鑾峰彇璇█鍖呯洰褰?        let mods_dir = match self.get_or_create_mods_cache_dir() {
             Some(dir) => dir,
             None => {
-                self.state.add_log("错误: 无法获取语言包目录");
+                self.state.add_log("閿欒: 鏃犳硶鑾峰彇璇█鍖呯洰褰?);
                 return;
             }
         };
@@ -1906,12 +1769,11 @@ impl App {
         let old_name = mod_info.name.clone();
         let old_path = mod_info.path.clone();
         
-        // 如果新名称与旧名称相同，则不做任何操作
-        if old_name == new_name {
+        // 濡傛灉鏂板悕绉颁笌鏃у悕绉扮浉鍚岋紝鍒欎笉鍋氫换浣曟搷浣?        if old_name == new_name {
             return;
         }
         
-        // 确保新文件名以.po结尾
+        // 纭繚鏂版枃浠跺悕浠?po缁撳熬
         let new_name_with_ext = if new_name.to_lowercase().ends_with(".po") {
             new_name
         } else {
@@ -1920,58 +1782,53 @@ impl App {
         
         let new_path = mods_dir.join(&new_name_with_ext);
         
-        // 尝试重命名文件
-        match std::fs::rename(&old_path, &new_path) {
+        // 灏濊瘯閲嶅懡鍚嶆枃浠?        match std::fs::rename(&old_path, &new_path) {
             Ok(_) => {
-                // 更新模组信息
+                // 鏇存柊妯＄粍淇℃伅
                 mod_info.name = new_name_with_ext.clone();
                 mod_info.path = new_path;
                 
-                // 更新配置中的状态记录
-                if let Some(is_enabled) = self.config.saved_mods.remove(&old_name) {
+                // 鏇存柊閰嶇疆涓殑鐘舵€佽褰?                if let Some(is_enabled) = self.config.saved_mods.remove(&old_name) {
                     self.config.saved_mods.insert(new_name_with_ext.clone(), is_enabled);
                 }
                 
-                // 保存配置
+                // 淇濆瓨閰嶇疆
                 self.config.save().ok();
                 
-                self.state.add_log(&format!("语言包重命名成功: {} -> {}", old_name, new_name_with_ext));
+                self.state.add_log(&format!("璇█鍖呴噸鍛藉悕鎴愬姛: {} -> {}", old_name, new_name_with_ext));
                 
-                // 标记需要重新合并
-                self.state.needs_remerge = true;
+                // 鏍囪闇€瑕侀噸鏂板悎骞?                self.state.needs_remerge = true;
             },
             Err(e) => {
-                self.state.add_log(&format!("语言包重命名失败: {}", e));
+                self.state.add_log(&format!("璇█鍖呴噸鍛藉悕澶辫触: {}", e));
             }
         }
     }
 
-    // 自动定位Blender中文MO文件
+    // 鑷姩瀹氫綅Blender涓枃MO鏂囦欢
     fn auto_locate_blender_mo_file(&mut self) {
-        self.state.add_log("正在自动搜索Blender中文MO文件...");
+        self.state.add_log("姝ｅ湪鑷姩鎼滅储Blender涓枃MO鏂囦欢...");
         
-        // 常见的Blender安装路径
+        // 甯歌鐨凚lender瀹夎璺緞
         let common_paths = vec![
             "C:/Program Files/Blender Foundation",
             "D:/Program Files/Blender Foundation",
             "C:/Program Files (x86)/Blender Foundation",
         ];
         
-        // 首先让用户选择Blender主目录
-        let selected_blender_dir = rfd::FileDialog::new()
-            .set_title("选择Blender安装目录")
+        // 棣栧厛璁╃敤鎴烽€夋嫨Blender涓荤洰褰?        let selected_blender_dir = rfd::FileDialog::new()
+            .set_title("閫夋嫨Blender瀹夎鐩綍")
             .set_directory(common_paths[0])
             .pick_folder();
             
         if let Some(blender_dir) = selected_blender_dir {
-            // 只显示目录名称，避免过长
+            // 鍙樉绀虹洰褰曞悕绉帮紝閬垮厤杩囬暱
             let dir_name = blender_dir.file_name()
-                .map_or_else(|| "[未知目录]".to_string(),
+                .map_or_else(|| "[鏈煡鐩綍]".to_string(),
                           |name| name.to_string_lossy().to_string());
-            self.state.add_log(&format!("选择了Blender目录: {}", dir_name));
+            self.state.add_log(&format!("閫夋嫨浜咮lender鐩綍: {}", dir_name));
             
-            // 在选定目录中查找版本目录（如Blender 4.3）
-            let mut version_dirs = Vec::new();
+            // 鍦ㄩ€夊畾鐩綍涓煡鎵剧増鏈洰褰曪紙濡侭lender 4.3锛?            let mut version_dirs = Vec::new();
             if let Ok(entries) = std::fs::read_dir(&blender_dir) {
                 for entry in entries.filter_map(|e| e.ok()) {
                     let path = entry.path();
@@ -1979,35 +1836,34 @@ impl App {
                         let dir_name = path.file_name().unwrap_or_default().to_string_lossy();
                         if dir_name.starts_with("Blender ") {
                             version_dirs.push(path.clone());
-                            self.state.add_log(&format!("找到Blender版本: {}", dir_name));
+                            self.state.add_log(&format!("鎵惧埌Blender鐗堟湰: {}", dir_name));
                         }
                     }
                 }
             }
             
-            // 如果找到版本目录，让用户选择
+            // 濡傛灉鎵惧埌鐗堟湰鐩綍锛岃鐢ㄦ埛閫夋嫨
             let selected_version_dir = if !version_dirs.is_empty() {
-                // 如果只有一个版本目录，直接使用
+                // 濡傛灉鍙湁涓€涓増鏈洰褰曪紝鐩存帴浣跨敤
                 if version_dirs.len() == 1 {
                     Some(version_dirs[0].clone())
                 } else {
-                    // 创建版本目录名称列表，供用户选择
+                    // 鍒涘缓鐗堟湰鐩綍鍚嶇О鍒楄〃锛屼緵鐢ㄦ埛閫夋嫨
                     let version_dir_names: Vec<String> = version_dirs.iter()
                         .map(|p| p.file_name().unwrap_or_default().to_string_lossy().to_string())
                         .collect();
                         
-                    // 让用户从对话框中选择版本
+                    // 璁╃敤鎴蜂粠瀵硅瘽妗嗕腑閫夋嫨鐗堟湰
                     let selected_result = rfd::MessageDialog::new()
-                        .set_title("选择Blender版本")
-                        .set_description(&format!("找到多个Blender版本，请选择一个:\n{}", 
+                        .set_title("閫夋嫨Blender鐗堟湰")
+                        .set_description(&format!("鎵惧埌澶氫釜Blender鐗堟湰锛岃閫夋嫨涓€涓?\n{}", 
                             version_dir_names.join("\n")))
                         .set_buttons(rfd::MessageButtons::OkCancel)
                         .show();
                         
                     if selected_result {
-                        // 如果用户点击确定，让他们选择具体的版本目录
-                        rfd::FileDialog::new()
-                            .set_title("选择Blender版本目录")
+                        // 濡傛灉鐢ㄦ埛鐐瑰嚮纭畾锛岃浠栦滑閫夋嫨鍏蜂綋鐨勭増鏈洰褰?                        rfd::FileDialog::new()
+                            .set_title("閫夋嫨Blender鐗堟湰鐩綍")
                             .set_directory(&blender_dir)
                             .pick_folder()
                     } else {
@@ -2015,37 +1871,31 @@ impl App {
                     }
                 }
             } else {
-                // 没有找到标准的版本目录，直接使用所选目录
-                Some(blender_dir)
+                // 娌℃湁鎵惧埌鏍囧噯鐨勭増鏈洰褰曪紝鐩存帴浣跨敤鎵€閫夌洰褰?                Some(blender_dir)
             };
             
-            // 如果选择了版本目录，继续查找子版本目录（如4.3）
-            if let Some(version_dir) = selected_version_dir {
-                self.state.add_log(&format!("选择的版本目录: {}", version_dir.display()));
+            // 濡傛灉閫夋嫨浜嗙増鏈洰褰曪紝缁х画鏌ユ壘瀛愮増鏈洰褰曪紙濡?.3锛?            if let Some(version_dir) = selected_version_dir {
+                self.state.add_log(&format!("閫夋嫨鐨勭増鏈洰褰? {}", version_dir.display()));
                 
-                // 在版本目录中查找子版本目录（如4.3）
-                let mut subversion_dirs = Vec::new();
+                // 鍦ㄧ増鏈洰褰曚腑鏌ユ壘瀛愮増鏈洰褰曪紙濡?.3锛?                let mut subversion_dirs = Vec::new();
                 if let Ok(entries) = std::fs::read_dir(&version_dir) {
                     for entry in entries.filter_map(|e| e.ok()) {
                         let path = entry.path();
                         if path.is_dir() {
                             let dir_name = path.file_name().unwrap_or_default().to_string_lossy();
-                            // 检查是否为版本号格式（如4.3）
-                            if dir_name.chars().any(|c| c.is_digit(10)) && dir_name.contains('.') {
+                            // 妫€鏌ユ槸鍚︿负鐗堟湰鍙锋牸寮忥紙濡?.3锛?                            if dir_name.chars().any(|c| c.is_digit(10)) && dir_name.contains('.') {
                                 subversion_dirs.push(path.clone());
-                                self.state.add_log(&format!("找到子版本目录: {}", dir_name));
+                                self.state.add_log(&format!("鎵惧埌瀛愮増鏈洰褰? {}", dir_name));
                             }
                         }
                     }
                 }
                 
-                // 选择要使用的子版本目录
-                let target_dir = if !subversion_dirs.is_empty() {
-                    // 如果只有一个子版本目录，询问用户是否使用
-                    if subversion_dirs.len() == 1 {
+                // 閫夋嫨瑕佷娇鐢ㄧ殑瀛愮増鏈洰褰?                let target_dir = if !subversion_dirs.is_empty() {
+                    // 濡傛灉鍙湁涓€涓瓙鐗堟湰鐩綍锛岃闂敤鎴锋槸鍚︿娇鐢?                    if subversion_dirs.len() == 1 {
                         let result = rfd::MessageDialog::new()
-                            .set_title("确认子版本目录")
-                            .set_description(&format!("是否使用子版本目录: {}?", 
+                            .set_title("纭瀛愮増鏈洰褰?)
+                            .set_description(&format!("鏄惁浣跨敤瀛愮増鏈洰褰? {}?", 
                                 subversion_dirs[0].file_name().unwrap_or_default().to_string_lossy()))
                             .set_buttons(rfd::MessageButtons::YesNo)
                             .show();
@@ -2056,9 +1906,9 @@ impl App {
                             version_dir
                         }
                     } else {
-                        // 让用户从多个子版本目录中选择
+                        // 璁╃敤鎴蜂粠澶氫釜瀛愮増鏈洰褰曚腑閫夋嫨
                         let selected_subversion = rfd::FileDialog::new()
-                            .set_title("选择Blender子版本目录")
+                            .set_title("閫夋嫨Blender瀛愮増鏈洰褰?)
                             .set_directory(&version_dir)
                             .pick_folder();
                             
@@ -2068,12 +1918,12 @@ impl App {
                     version_dir
                 };
                 
-                self.state.add_log(&format!("将在目录中搜索MO文件: {}", target_dir.display()));
+                self.state.add_log(&format!("灏嗗湪鐩綍涓悳绱O鏂囦欢: {}", target_dir.display()));
                 
-                // 在目标目录中查找MO文件
+                // 鍦ㄧ洰鏍囩洰褰曚腑鏌ユ壘MO鏂囦欢
                 let mut found_mo_files = Vec::new();
                 
-                // 构建可能的语言文件路径
+                // 鏋勫缓鍙兘鐨勮瑷€鏂囦欢璺緞
                 let mo_paths = vec![
                     target_dir.join("datafiles/locale/zh_HANS/LC_MESSAGES/blender.mo"),
                     target_dir.join("datafiles/locale/zh_CN/LC_MESSAGES/blender.mo"),
@@ -2081,30 +1931,25 @@ impl App {
                     target_dir.join("locale/zh_CN/LC_MESSAGES/blender.mo"),
                 ];
                 
-                // 检查每个路径
-                for path in mo_paths {
+                // 妫€鏌ユ瘡涓矾寰?                for path in mo_paths {
                     if path.exists() && path.is_file() {
-                        self.state.add_log(&format!("找到MO文件: {}", path.display()));
+                        self.state.add_log(&format!("鎵惧埌MO鏂囦欢: {}", path.display()));
                         found_mo_files.push(path);
                     }
                 }
                 
-                // 如果没找到，尝试递归搜索
+                // 濡傛灉娌℃壘鍒帮紝灏濊瘯閫掑綊鎼滅储
                 if found_mo_files.is_empty() {
-                    self.state.add_log(&format!("在标准路径未找到MO文件，尝试递归搜索: {}", target_dir.display()));
+                    self.state.add_log(&format!("鍦ㄦ爣鍑嗚矾寰勬湭鎵惧埌MO鏂囦欢锛屽皾璇曢€掑綊鎼滅储: {}", target_dir.display()));
                     self.search_mo_files_recursively(&target_dir, &mut found_mo_files);
                 }
                 
-                // 如果找到文件，让用户选择或自动选择第一个
-                if !found_mo_files.is_empty() {
-                    // 按文件路径排序
-                    found_mo_files.sort();
+                // 濡傛灉鎵惧埌鏂囦欢锛岃鐢ㄦ埛閫夋嫨鎴栬嚜鍔ㄩ€夋嫨绗竴涓?                if !found_mo_files.is_empty() {
+                    // 鎸夋枃浠惰矾寰勬帓搴?                    found_mo_files.sort();
                     
-                    // 如果只有一个文件，直接使用它
-                    if found_mo_files.len() == 1 {
+                    // 濡傛灉鍙湁涓€涓枃浠讹紝鐩存帴浣跨敤瀹?                    if found_mo_files.len() == 1 {
                         let file_path = found_mo_files[0].clone();
-                        let orig_path = file_path.clone(); // 克隆一份用于日志显示
-                        // 复制到BLMM目录并使用BLMM目录中的文件
+                        let orig_path = file_path.clone(); // 鍏嬮殕涓€浠界敤浜庢棩蹇楁樉绀?                        // 澶嶅埗鍒癇LMM鐩綍骞朵娇鐢˙LMM鐩綍涓殑鏂囦欢
                         if let Some(blmm_path) = self.clone_main_mo_to_blmm(&file_path) {
                             self.state.main_mo_file = Some(blmm_path.clone());
                             self.config.main_mo_file = Some(blmm_path);
@@ -2113,19 +1958,18 @@ impl App {
                             self.config.main_mo_file = Some(file_path);
                         }
                         self.config.save().ok();
-                        self.add_log_with_path("已自动设置唯一找到的MO文件", &orig_path);
+                        self.add_log_with_path("宸茶嚜鍔ㄨ缃敮涓€鎵惧埌鐨凪O鏂囦欢", &orig_path);
                     } else {
-                        // 让用户从找到的文件中选择
-                        self.state.add_log(&format!("找到 {} 个MO文件，请选择一个:", found_mo_files.len()));
+                        // 璁╃敤鎴蜂粠鎵惧埌鐨勬枃浠朵腑閫夋嫨
+                        self.state.add_log(&format!("鎵惧埌 {} 涓狹O鏂囦欢锛岃閫夋嫨涓€涓?", found_mo_files.len()));
                         
                         if let Some(selected_path) = rfd::FileDialog::new()
-                            .set_title("选择Blender中文MO文件")
-                            .add_filter("MO文件", &["mo"])
+                            .set_title("閫夋嫨Blender涓枃MO鏂囦欢")
+                            .add_filter("MO鏂囦欢", &["mo"])
                             .set_directory(found_mo_files[0].parent().unwrap_or(&PathBuf::from("/")))
                             .pick_file() {
                             
-                            let orig_path = selected_path.clone(); // 克隆一份用于日志显示
-                            // 复制到BLMM目录并使用BLMM目录中的文件
+                            let orig_path = selected_path.clone(); // 鍏嬮殕涓€浠界敤浜庢棩蹇楁樉绀?                            // 澶嶅埗鍒癇LMM鐩綍骞朵娇鐢˙LMM鐩綍涓殑鏂囦欢
                             if let Some(blmm_path) = self.clone_main_mo_to_blmm(&selected_path) {
                                 self.state.main_mo_file = Some(blmm_path.clone());
                                 self.config.main_mo_file = Some(blmm_path);
@@ -2134,21 +1978,19 @@ impl App {
                                 self.config.main_mo_file = Some(selected_path);
                             }
                             self.config.save().ok();
-                            self.add_log_with_path("已设置主MO文件", &orig_path);
+                            self.add_log_with_path("宸茶缃富MO鏂囦欢", &orig_path);
                         }
                     }
                 } else {
-                    self.state.add_log("未找到Blender中文MO文件，请手动选择。");
+                    self.state.add_log("鏈壘鍒癇lender涓枃MO鏂囦欢锛岃鎵嬪姩閫夋嫨銆?);
                     
-                    // 打开文件选择对话框
-                    if let Some(file) = rfd::FileDialog::new()
-                        .add_filter("MO文件", &["mo"])
-                        .set_title("选择Blender中文MO文件")
+                    // 鎵撳紑鏂囦欢閫夋嫨瀵硅瘽妗?                    if let Some(file) = rfd::FileDialog::new()
+                        .add_filter("MO鏂囦欢", &["mo"])
+                        .set_title("閫夋嫨Blender涓枃MO鏂囦欢")
                         .set_directory(&target_dir)
                         .pick_file() {
-                            // 复制到BLMM目录并使用BLMM目录中的文件
-                            let orig_file = file.clone(); // 克隆一份用于日志显示
-                            if let Some(blmm_path) = self.clone_main_mo_to_blmm(&file) {
+                            // 澶嶅埗鍒癇LMM鐩綍骞朵娇鐢˙LMM鐩綍涓殑鏂囦欢
+                            let orig_file = file.clone(); // 鍏嬮殕涓€浠界敤浜庢棩蹇楁樉绀?                            if let Some(blmm_path) = self.clone_main_mo_to_blmm(&file) {
                                 self.state.main_mo_file = Some(blmm_path.clone());
                                 self.config.main_mo_file = Some(blmm_path);
                             } else {
@@ -2156,18 +1998,18 @@ impl App {
                                 self.config.main_mo_file = Some(file);
                             }
                             self.config.save().ok();
-                            self.add_log_with_path("已设置主MO文件", &orig_file);
+                            self.add_log_with_path("宸茶缃富MO鏂囦欢", &orig_file);
                     }
                 }
             }
         } else {
-            self.state.add_log("未选择Blender目录，操作取消。");
+            self.state.add_log("鏈€夋嫨Blender鐩綍锛屾搷浣滃彇娑堛€?);
         }
     }
     
-    // 递归搜索MO文件
+    // 閫掑綊鎼滅储MO鏂囦欢
     fn search_mo_files_recursively(&mut self, dir: &PathBuf, found_files: &mut Vec<PathBuf>) {
-        // 设置最大深度为8，避免搜索太深导致性能问题
+        // 璁剧疆鏈€澶ф繁搴︿负8锛岄伩鍏嶆悳绱㈠お娣卞鑷存€ц兘闂
         let max_depth = 8;
         
         for entry in walkdir::WalkDir::new(dir)
@@ -2178,19 +2020,18 @@ impl App {
             
             let path = entry.path();
             
-            // 检查是否为MO文件
+            // 妫€鏌ユ槸鍚︿负MO鏂囦欢
             if path.is_file() && path.extension().map_or(false, |e| e.to_string_lossy().to_lowercase() == "mo") {
-                // 检查文件路径是否包含中文相关关键词
+                // 妫€鏌ユ枃浠惰矾寰勬槸鍚﹀寘鍚腑鏂囩浉鍏冲叧閿瘝
                 let path_str = path.to_string_lossy().to_lowercase();
                 if (path_str.contains("zh_") || path_str.contains("chinese") || 
                     path_str.contains("zh-") || path_str.contains("/zh/") || 
                     path_str.contains("\\zh\\")) && path_str.contains("blender") {
                     
-                    // 获取文件名用于日志显示
-                    let file_name = path.file_name()
-                        .map_or_else(|| "[未知文件]".to_string(), 
+                    // 鑾峰彇鏂囦欢鍚嶇敤浜庢棩蹇楁樉绀?                    let file_name = path.file_name()
+                        .map_or_else(|| "[鏈煡鏂囦欢]".to_string(), 
                                    |name| name.to_string_lossy().to_string());
-                    self.state.add_log(&format!("递归搜索找到MO文件: {}", file_name));
+                    self.state.add_log(&format!("閫掑綊鎼滅储鎵惧埌MO鏂囦欢: {}", file_name));
                     found_files.push(path.to_path_buf());
                 }
             }
@@ -2198,49 +2039,40 @@ impl App {
     }
 
     fn add_log_with_path(&mut self, message: &str, path: &PathBuf) {
-        // 提取文件名用于日志显示
-        let file_name = path.file_name()
-            .map_or_else(|| "[未知文件]".to_string(), 
+        // 鎻愬彇鏂囦欢鍚嶇敤浜庢棩蹇楁樉绀?        let file_name = path.file_name()
+            .map_or_else(|| "[鏈煡鏂囦欢]".to_string(), 
                       |name| name.to_string_lossy().to_string());
         self.state.add_log(&format!("{}: {}", message, file_name));
     }
 
-    // 导出基础文件（不合并）
-    fn export_base_mo_file(&mut self) {
-        // 检查是否有主MO文件
+    // 瀵煎嚭鍩虹鏂囦欢锛堜笉鍚堝苟锛?    fn export_base_mo_file(&mut self) {
+        // 妫€鏌ユ槸鍚︽湁涓籑O鏂囦欢
         if self.state.main_mo_file.is_none() {
-            self.state.add_log("错误: 请先在设置中设置主MO文件");
+            self.state.add_log("閿欒: 璇峰厛鍦ㄨ缃腑璁剧疆涓籑O鏂囦欢");
             return;
         }
         
         let base_mo_file = self.state.main_mo_file.clone().unwrap();
         
-        // 检查文件是否存在
-        if !base_mo_file.exists() {
-            self.state.add_log(&format!("错误: 基础MO文件不存在: {}", base_mo_file.display()));
+        // 妫€鏌ユ枃浠舵槸鍚﹀瓨鍦?        if !base_mo_file.exists() {
+            self.state.add_log(&format!("閿欒: 鍩虹MO鏂囦欢涓嶅瓨鍦? {}", base_mo_file.display()));
             return;
         }
         
-        // 创建输出MO文件路径 - 使用用户设置的输出目录或桌面上的"BLMM导出"文件夹
-        let output_mo_path = if let Some(output_dir) = &self.state.output_directory {
-            // 使用用户设置的输出目录
-            if let Err(e) = std::fs::create_dir_all(output_dir) {
-                self.state.add_log(&format!("创建输出目录失败: {}", e));
-                // 如果创建目录失败，回退到桌面上的"BLMM导出"文件夹
-                self.create_default_output_directory()
+        // 鍒涘缓杈撳嚭MO鏂囦欢璺緞 - 浣跨敤鐢ㄦ埛璁剧疆鐨勮緭鍑虹洰褰曟垨妗岄潰涓婄殑"BLMM瀵煎嚭"鏂囦欢澶?        let output_mo_path = if let Some(output_dir) = &self.state.output_directory {
+            // 浣跨敤鐢ㄦ埛璁剧疆鐨勮緭鍑虹洰褰?            if let Err(e) = std::fs::create_dir_all(output_dir) {
+                self.state.add_log(&format!("鍒涘缓杈撳嚭鐩綍澶辫触: {}", e));
+                // 濡傛灉鍒涘缓鐩綍澶辫触锛屽洖閫€鍒版闈笂鐨?BLMM瀵煎嚭"鏂囦欢澶?                self.create_default_output_directory()
                     .map(|dir| dir.join("blender.mo"))
                     .unwrap_or_else(|| base_mo_file.with_file_name("blender.mo"))
             } else {
-                // 使用设置的输出目录
-                output_dir.join("blender.mo")
+                // 浣跨敤璁剧疆鐨勮緭鍑虹洰褰?                output_dir.join("blender.mo")
             }
         } else {
-            // 未设置输出目录，使用桌面上的"BLMM导出"文件夹
-            self.create_default_output_directory()
+            // 鏈缃緭鍑虹洰褰曪紝浣跨敤妗岄潰涓婄殑"BLMM瀵煎嚭"鏂囦欢澶?            self.create_default_output_directory()
                 .map(|dir| dir.join("blender.mo"))
                 .unwrap_or_else(|| {
-                    // 如果创建桌面文件夹失败，回退到主MO文件所在目录
-                    if let Some(parent) = base_mo_file.parent() {
+                    // 濡傛灉鍒涘缓妗岄潰鏂囦欢澶瑰け璐ワ紝鍥為€€鍒颁富MO鏂囦欢鎵€鍦ㄧ洰褰?                    if let Some(parent) = base_mo_file.parent() {
                         parent.join("blender.mo")
                     } else {
                         base_mo_file.with_file_name("blender.mo")
@@ -2248,92 +2080,23 @@ impl App {
                 })
         };
         
-        // 复制文件
-        self.state.add_log(&format!("正在导出基础MO文件到: {}", output_mo_path.display()));
+        // 澶嶅埗鏂囦欢
+        self.state.add_log(&format!("姝ｅ湪瀵煎嚭鍩虹MO鏂囦欢鍒? {}", output_mo_path.display()));
         match std::fs::copy(&base_mo_file, &output_mo_path) {
             Ok(_) => {
-                self.state.add_log(&format!("基础MO文件导出成功: {}", output_mo_path.display()));
+                self.state.add_log(&format!("鍩虹MO鏂囦欢瀵煎嚭鎴愬姛: {}", output_mo_path.display()));
                 
-                // 尝试打开输出目录
+                // 灏濊瘯鎵撳紑杈撳嚭鐩綍
                 if let Some(parent) = output_mo_path.parent() {
                     if let Err(e) = open::that(parent) {
-                        self.state.add_log(&format!("尝试打开输出目录失败: {}", e));
+                        self.state.add_log(&format!("灏濊瘯鎵撳紑杈撳嚭鐩綍澶辫触: {}", e));
                     }
                 }
             },
             Err(e) => {
-                self.state.add_log(&format!("导出基础MO文件失败: {}", e));
+                self.state.add_log(&format!("瀵煎嚭鍩虹MO鏂囦欢澶辫触: {}", e));
             }
         }
-    }
-
-    // 添加合并PO文件方法
-    fn merge_po_files(&mut self) {
-        // 检查是否有主MO文件
-        if self.state.main_mo_file.is_none() {
-            self.state.add_log("错误: 请先在设置中设置主MO文件");
-            return;
-        }
-        
-        // 检查是否有启用的语言包
-        let enabled_mods = self.state.installed_mods.iter()
-            .filter(|m| m.status == ModStatus::Enabled)
-            .count();
-            
-        if enabled_mods == 0 && !self.state.needs_remerge {
-            self.state.add_log("错误: 没有启用的语言包需要合并");
-            return;
-        }
-        
-        // 设置合并状态
-        self.state.is_merging = true;
-        self.state.merge_progress = 0.0;
-        self.state.merge_progress_anim = 0;
-        
-        // 在线程中执行合并，以避免UI冻结
-        let tx = self.merge_tx.clone();
-        let po_files: Vec<PathBuf> = self.state.installed_mods.iter()
-            .filter(|m| m.status == ModStatus::Enabled)
-            .map(|m| m.path.clone())
-            .collect();
-        let ignore_main = self.state.ignore_main_mo_entries;
-        
-        self.thread_pool.spawn(move || {
-            // 通知开始
-            let _ = tx.send(MergeStatus::Started);
-            
-            // 创建缓存目录
-            let cache_dir = if let Some(local_dir) = dirs::data_local_dir() {
-                local_dir.join("BLMM").join("cache")
-            } else {
-                std::env::temp_dir().join("BLMM").join("cache")
-            };
-            
-            if let Err(e) = std::fs::create_dir_all(&cache_dir) {
-                let _ = tx.send(MergeStatus::Failed(format!("创建缓存目录失败: {}", e)));
-                return;
-            }
-            
-            // 缓存合并PO的路径
-            let cached_po_path = cache_dir.join("cached_merged.po");
-            
-            // 更新进度 25%
-            let _ = tx.send(MergeStatus::Progress(0.25));
-            
-            // 合并PO文件
-            match po_merger::merge_po_files(&po_files, &cached_po_path, ignore_main) {
-                Ok(_) => {
-                    // 更新进度 75%
-                    let _ = tx.send(MergeStatus::Progress(0.75));
-                    
-                    // 完成
-                    let _ = tx.send(MergeStatus::Completed(cached_po_path));
-                },
-                Err(e) => {
-                    let _ = tx.send(MergeStatus::Failed(format!("合并PO文件失败: {}", e)));
-                }
-            }
-        });
     }
 }
 
@@ -2345,32 +2108,29 @@ impl eframe::App for App {
         // Process merge status updates
         self.process_merge_status();
         
-        // 设置主题
+        // 璁剧疆涓婚
         let visuals = crate::models::ThemeManager::get_visuals(&self.config.theme);
         ctx.set_visuals(visuals);
         
-        // 为了向后兼容，保持dark_mode标志与主题同步
-        self.state.dark_mode = self.config.theme != crate::models::AppTheme::Light 
+        // 涓轰簡鍚戝悗鍏煎锛屼繚鎸乨ark_mode鏍囧織涓庝富棰樺悓姝?        self.state.dark_mode = self.config.theme != crate::models::AppTheme::Light 
             && self.config.theme != crate::models::AppTheme::Sepia;
         
-        // 顶部菜单栏
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+        // 椤堕儴鑿滃崟鏍?        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
-                // 移除全局暗/亮模式按钮
-                // egui::widgets::global_dark_light_mode_buttons(ui);
-                // ui.add_space(8.0);
+                // 鍏ㄥ眬鏆?浜ā寮忔寜閽?                egui::widgets::global_dark_light_mode_buttons(ui);
+                ui.add_space(8.0);
                 
-                // 文件菜单
-                ui.menu_button("文件", |ui| {
-                    if ui.button("添加语言包").clicked() {
+                // 鏂囦欢鑿滃崟
+                ui.menu_button("鏂囦欢", |ui| {
+                    if ui.button("娣诲姞璇█鍖?).clicked() {
                         self.state.show_mods = true;
                         ui.close_menu();
                     }
                     
                     ui.separator();
                     
-                    // 设置选项 - 直接打开语言包管理器的设置标签页
-                    if ui.button("设置").clicked() {
+                    // 璁剧疆閫夐」 - 鐩存帴鎵撳紑璇█鍖呯鐞嗗櫒鐨勮缃爣绛鹃〉
+                    if ui.button("璁剧疆").clicked() {
                         self.state.show_mods = true;
                         self.state.show_mods_tab = ModsTab::Settings;
                         ui.close_menu();
@@ -2378,52 +2138,51 @@ impl eframe::App for App {
                     
                     ui.separator();
                     
-                    if ui.button("退出").clicked() {
+                    if ui.button("閫€鍑?).clicked() {
                         frame.close();
-                        // 关闭时保存配置
-                        self.save_config_on_exit();
+                        // 鍏抽棴鏃朵繚瀛橀厤缃?                        self.save_config_on_exit();
                         ui.close_menu();
                     }
                 });
                 
-                // 工具菜单
-                ui.menu_button("工具", |ui| {
-                    if ui.button("合并语言包").clicked() {
+                // 宸ュ叿鑿滃崟
+                ui.menu_button("宸ュ叿", |ui| {
+                    if ui.button("鍚堝苟璇█鍖?).clicked() {
                         self.merge_po_files();
                         ui.close_menu();
                     }
                     
-                    if ui.button("导出基础MO文件").clicked() {
+                    if ui.button("瀵煎嚭鍩虹MO鏂囦欢").clicked() {
                         self.export_base_mo_file();
                         ui.close_menu();
                     }
                     
                     ui.separator();
                     
-                    if ui.button("批量处理").clicked() {
+                    if ui.button("鎵归噺澶勭悊").clicked() {
                         self.batch_process();
                         ui.close_menu();
                     }
                 });
                 
-                // 窗口菜单
-                ui.menu_button("窗口", |ui| {
-                    if ui.button("语言包管理器").clicked() {
+                // 绐楀彛鑿滃崟
+                ui.menu_button("绐楀彛", |ui| {
+                    if ui.button("璇█鍖呯鐞嗗櫒").clicked() {
                         self.state.show_mods = true;
                         ui.close_menu();
                     }
                 });
                 
-                // 帮助菜单
-                ui.menu_button("帮助", |ui| {
-                    if ui.button("使用帮助").clicked() {
+                // 甯姪鑿滃崟
+                ui.menu_button("甯姪", |ui| {
+                    if ui.button("浣跨敤甯姪").clicked() {
                         self.state.show_help = true;
                         ui.close_menu();
                     }
                     
                     ui.separator();
                     
-                    if ui.button("关于").clicked() {
+                    if ui.button("鍏充簬").clicked() {
                         self.state.show_about = true;
                         ui.close_menu();
                     }
@@ -2439,7 +2198,7 @@ impl eframe::App for App {
                 self.render_operations(ui);
                 ui.separator();
                 
-                if ui.button("语言包管理器").clicked() {
+                if ui.button("璇█鍖呯鐞嗗櫒").clicked() {
                     self.state.show_mods = true;
                 }
                 
