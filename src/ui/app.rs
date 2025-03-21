@@ -628,7 +628,7 @@ impl App {
             }
 
             // 添加"安装语言包"按钮，使用强调色
-            if ui.add(egui::Button::new(RichText::new("安装语言包(可多选)").color(accent_color))
+            if ui.add(egui::Button::new(RichText::new("安装模组包(可多选)").color(accent_color))
                 .min_size(egui::vec2(150.0, 24.0)))
                 .clicked() {
                 self.install_new_mod();
@@ -666,7 +666,7 @@ impl App {
                             let button_text = if self.state.needs_remerge {
                                 RichText::new("重新合并").color(Color32::LIGHT_BLUE)
                             } else {
-                                RichText::new("应用到MO文件").color(Color32::LIGHT_BLUE)
+                                RichText::new("合并模组").color(Color32::LIGHT_BLUE)
                             };
                             
                             let button = egui::Button::new(button_text)
@@ -813,7 +813,19 @@ impl App {
 
                                 // Color the selected row
                                 let text_color = if is_enabled { Color32::LIGHT_BLUE } else { ui.style().visuals.text_color() };
-                                ui.colored_label(text_color, &mod_info.name);
+                                
+                                // Display the name without file extension
+                                let display_name = if mod_info.name.to_lowercase().ends_with(".po") {
+                                    if let Some(pos) = mod_info.name.rfind('.') {
+                                        &mod_info.name[0..pos]
+                                    } else {
+                                        &mod_info.name
+                                    }
+                                } else {
+                                    &mod_info.name
+                                };
+                                
+                                ui.colored_label(text_color, display_name);
 
                                 // Right side of the row
                                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
@@ -852,9 +864,21 @@ impl App {
                             row_response.response.context_menu(|ui| {
                                 if ui.button("重命名").clicked() {
                                     // 打开重命名对话框
-                                    let mod_name = self.state.installed_mods[index].name.clone();
+                                    let mod_name = &self.state.installed_mods[index].name;
                                     self.state.rename_mod_index = Some(index);
-                                    self.state.rename_mod_name = mod_name;
+                                    
+                                    // Strip the .po extension for display
+                                    let display_name = if mod_name.to_lowercase().ends_with(".po") {
+                                        if let Some(pos) = mod_name.rfind('.') {
+                                            mod_name[0..pos].to_string()
+                                        } else {
+                                            mod_name.clone()
+                                        }
+                                    } else {
+                                        mod_name.clone()
+                                    };
+                                    
+                                    self.state.rename_mod_name = display_name;
                                     ui.close_menu();
                                 }
                                 
