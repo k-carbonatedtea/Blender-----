@@ -460,7 +460,7 @@ impl App {
         });
     }
     
-    fn render_settings(&mut self, _ctx: &egui::Context) {
+    fn render_settings(&mut self, ctx: &egui::Context) {
         if self.state.show_settings {
             // 当通过菜单打开设置窗口时，自动切换到语言包管理器的设置标签页
             self.state.show_mods = true;
@@ -968,7 +968,8 @@ impl App {
                 });
             });
         }
-        
+    }
+    
         // Install dialog
         self.render_install_dialog(ui.ctx());
     }
@@ -2394,7 +2395,7 @@ impl App {
     fn render_openai_tab(&mut self, ui: &mut Ui) {
         // 获取主题颜色
         let accent_color = crate::models::ThemeManager::get_accent_color(&self.config.theme);
-        let (_success_color, _warning_color, error_color, _info_color) =
+        let (success_color, warning_color, error_color, _info_color) =
             crate::models::ThemeManager::get_status_colors();
         
         ui.heading("OpenAI 翻译助手");
@@ -2541,7 +2542,7 @@ impl App {
                             ui.end_row();
                             
                             // 获取自定义模型副本，以便安全地修改原始列表
-                            let models = self.config.openai_config.custom_models.clone();
+                            let mut models = self.config.openai_config.custom_models.clone();
                             let mut model_to_delete = None;
                             
                             for (i, model) in models.iter().enumerate() {
@@ -2674,7 +2675,7 @@ impl App {
                 .max_height(row_height * num_rows as f32)
                 .show(ui, |ui| {
                     let mut response_clone = response.clone();
-                    let _response_label = ui.add(
+                    let response_label = ui.add(
                         egui::TextEdit::multiline(&mut response_clone)
                             .desired_width(ui.available_width())
                             .desired_rows(num_rows)

@@ -7,6 +7,7 @@ pub enum ModsTab {
     Mods,
     Package,
     Settings,
+    OpenAI,
 }
 
 pub struct AppState {
@@ -43,6 +44,19 @@ pub struct AppState {
     pub show_help: bool,
     pub rename_mod_index: Option<usize>,
     pub rename_mod_name: String,
+    // OpenAI 相关状态
+    pub openai_test_prompt: String,
+    pub openai_response: Option<String>,
+    pub openai_is_processing: bool,
+    pub openai_source_lang: String,
+    pub openai_target_lang: String,
+    pub openai_last_error: Option<String>,
+    // 自定义模型相关状态
+    pub show_custom_model_dialog: bool,
+    pub new_custom_model_name: String,
+    pub new_custom_model_id: String,
+    pub new_custom_model_description: String,
+    pub editing_model_index: Option<usize>,
 }
 
 impl Default for AppState {
@@ -76,6 +90,19 @@ impl Default for AppState {
             show_help: false,
             rename_mod_index: None,
             rename_mod_name: String::new(),
+            // OpenAI 相关状态默认值
+            openai_test_prompt: "请将这段文本翻译成中文".to_string(),
+            openai_response: None,
+            openai_is_processing: false,
+            openai_source_lang: "英语".to_string(),
+            openai_target_lang: "中文".to_string(),
+            openai_last_error: None,
+            // 自定义模型默认值
+            show_custom_model_dialog: false,
+            new_custom_model_name: String::new(),
+            new_custom_model_id: String::new(),
+            new_custom_model_description: String::new(),
+            editing_model_index: None,
         }
     }
 }

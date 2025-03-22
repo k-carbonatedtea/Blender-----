@@ -3,6 +3,7 @@ use std::fs;
 use std::io;
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
+use crate::models::OpenAIConfig;
 
 /// 定义可选的主题
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -41,6 +42,10 @@ pub struct AppConfig {
     // 保存每个mod的启用状态 (文件名 -> 是否启用)
     pub saved_mods: HashMap<String, bool>,
     pub ignore_main_mo_entries: bool,
+    // OpenAI API 配置
+    pub openai_config: OpenAIConfig,
+    // 是否启用 OpenAI 功能
+    pub enable_openai: bool,
 }
 
 impl Default for AppConfig {
@@ -56,6 +61,8 @@ impl Default for AppConfig {
             show_logs: true,
             saved_mods: HashMap::new(),
             ignore_main_mo_entries: false,
+            openai_config: OpenAIConfig::default(),
+            enable_openai: false,
         }
     }
 }
