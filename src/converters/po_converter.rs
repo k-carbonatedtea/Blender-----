@@ -22,9 +22,17 @@ impl PoConverter {
         // 解析PO文件，获取所有翻译条目
         let entries = Self::parse_po_file(input)?;
         
-        // 排序条目 (原始文本)
+        // 排序条目 (原始文本)，考虑 msgctxt
         let mut sorted_entries: Vec<_> = entries.values().collect();
-        sorted_entries.sort_by(|a, b| a.msgid.cmp(&b.msgid));
+        sorted_entries.sort_by(|a, b| {
+            // 先按 msgctxt 排序，再按 msgid 排序
+            match (&a.msgctxt, &b.msgctxt) {
+                (Some(a_ctx), Some(b_ctx)) => a_ctx.cmp(b_ctx).then(a.msgid.cmp(&b.msgid)),
+                (Some(_), None) => std::cmp::Ordering::Less,
+                (None, Some(_)) => std::cmp::Ordering::Greater,
+                (None, None) => a.msgid.cmp(&b.msgid),
+            }
+        });
         
         // 创建输出文件
         let mut file = File::create(output).map_err(|e| format!("无法创建输出文件: {}", e))?;
@@ -37,86 +45,98 @@ impl PoConverter {
     
     /// 解析PO文件内容，提取所有翻译条目
     fn parse_po_file(input: &Path) -> Result<HashMap<String, PoEntry>, String> {
-        // 读取文件内容
         let file = File::open(input).map_err(|e| format!("无法打开输入文件: {}", e))?;
         let reader = BufReader::new(file);
         let lines: Vec<String> = reader.lines().collect::<Result<Vec<_>, io::Error>>()
             .map_err(|e| format!("读取PO文件时出错: {}", e))?;
         
-        // 使用线程安全的HashMap收集所有条目
-        let entries = Arc::new(Mutex::new(HashMap::new()));
+        let mut entries = HashMap::new();
+        let mut current_entry = PoEntry::default();
+        let mut reading_msgctxt = false;
+        let mut reading_msgid = false;
+        let mut reading_msgstr = false;
         
-        // 按块处理文件，提高并行性能
-        let chunks: Vec<_> = lines.chunks(100).collect();
-        
-        // 首先处理头部信息
-        let _header = PoEntry {
-            msgid: String::new(),
-            msgstr: String::new(),
-        };
-        
-        chunks.into_par_iter().for_each(|chunk| {
-            let mut current_entry = PoEntry::default();
-            let mut reading_msgid = false;
-            let mut reading_msgstr = false;
+        for line in lines {
+            let line = line.trim();
             
-            for line in chunk {
-                let line = line.trim();
-                
-                if line.is_empty() || line.starts_with('#') {
-                    if !current_entry.msgid.is_empty() || (!current_entry.msgid.is_empty() && !current_entry.msgstr.is_empty()) {
-                        let mut entries_lock = entries.lock().unwrap();
-                        entries_lock.insert(current_entry.msgid.clone(), current_entry.clone());
-                    }
+            if line.is_empty() || line.starts_with('#') {
+                if !current_entry.msgid.is_empty() {
+                    let key = match &current_entry.msgctxt {
+                        Some(ctx) if !ctx.is_empty() => format!("{}\u{4}{}", ctx, current_entry.msgid),
+                        _ => current_entry.msgid.clone()
+                    };
+                    entries.insert(key, current_entry.clone());
                     current_entry = PoEntry::default();
-                    reading_msgid = false;
-                    reading_msgstr = false;
-                    continue;
                 }
-                
-                if line.starts_with("msgid ") {
-                    reading_msgid = true;
-                    reading_msgstr = false;
-                    let content = Self::extract_content(line, "msgid ");
-                    current_entry.msgid = content;
-                } else if line.starts_with("msgstr ") {
-                    reading_msgid = false;
-                    reading_msgstr = true;
-                    let content = Self::extract_content(line, "msgstr ");
-                    current_entry.msgstr = content;
-                } else if line.starts_with("\"") && line.ends_with("\"") {
-                    let content = Self::extract_string_line(line);
-                    if reading_msgid {
-                        current_entry.msgid.push_str(&content);
-                    } else if reading_msgstr {
-                        current_entry.msgstr.push_str(&content);
-                    }
-                }
+                reading_msgctxt = false;
+                reading_msgid = false;
+                reading_msgstr = false;
+                continue;
             }
             
-            if !current_entry.msgid.is_empty() || (!current_entry.msgid.is_empty() && !current_entry.msgstr.is_empty()) {
-                let mut entries_lock = entries.lock().unwrap();
-                entries_lock.insert(current_entry.msgid.clone(), current_entry);
+            if line.starts_with("msgctxt ") {
+                if !current_entry.msgid.is_empty() {
+                    let key = match &current_entry.msgctxt {
+                        Some(ctx) if !ctx.is_empty() => format!("{}\u{4}{}", ctx, current_entry.msgid),
+                        _ => current_entry.msgid.clone()
+                    };
+                    entries.insert(key, current_entry.clone());
+                    current_entry = PoEntry::default();
+                }
+                reading_msgctxt = true;
+                reading_msgid = false;
+                reading_msgstr = false;
+                let content = Self::extract_content(line, "msgctxt ");
+                current_entry.msgctxt = Some(content);
+            } else if line.starts_with("msgid ") {
+                reading_msgctxt = false;
+                reading_msgid = true;
+                reading_msgstr = false;
+                let content = Self::extract_content(line, "msgid ");
+                current_entry.msgid = content;
+            } else if line.starts_with("msgstr ") {
+                reading_msgctxt = false;
+                reading_msgid = false;
+                reading_msgstr = true;
+                let content = Self::extract_content(line, "msgstr ");
+                current_entry.msgstr = content;
+            } else if line.starts_with("\"") && line.ends_with("\"") {
+                let content = Self::extract_string_line(line);
+                if reading_msgctxt {
+                    current_entry.msgctxt.as_mut().unwrap().push_str(&content);
+                } else if reading_msgid {
+                    current_entry.msgid.push_str(&content);
+                } else if reading_msgstr {
+                    current_entry.msgstr.push_str(&content);
+                }
             }
-        });
+        }
         
-        let result = Arc::try_unwrap(entries).unwrap().into_inner().unwrap();
+        // 处理最后一个条目
+        if !current_entry.msgid.is_empty() {
+            let key = match &current_entry.msgctxt {
+                Some(ctx) if !ctx.is_empty() => format!("{}\u{4}{}", ctx, current_entry.msgid),
+                _ => current_entry.msgid.clone()
+            };
+            entries.insert(key, current_entry);
+        }
         
         // 确保有PO头部信息
-        if !result.contains_key("") {
+        if !entries.contains_key("") {
             let mut result_with_header = HashMap::new();
             result_with_header.insert(String::new(), PoEntry {
+                msgctxt: None,
                 msgid: String::new(),
                 msgstr: "Content-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n".to_string(),
             });
             
-            for (k, v) in result {
+            for (k, v) in entries {
                 result_with_header.insert(k, v);
             }
             
             Ok(result_with_header)
         } else {
-            Ok(result)
+            Ok(entries)
         }
     }
     
@@ -197,8 +217,14 @@ impl PoConverter {
         });
         
         for entry in &sorted_entries {
-            // 原始文本: msgid
-            let msgid_bytes = entry.msgid.as_bytes();
+            // 如果有 msgctxt，将其与 msgid 组合
+            let msgid = match &entry.msgctxt {
+                Some(ctx) if !ctx.is_empty() => format!("{}\u{4}{}", ctx, entry.msgid),
+                _ => entry.msgid.clone()
+            };
+            
+            // 原始文本: msgid (可能包含 msgctxt)
+            let msgid_bytes = msgid.as_bytes();
             string_offsets.push((msgid_bytes.len() as u32, current_offset));
             string_data.extend_from_slice(msgid_bytes);
             string_data.push(0); // Null terminator
@@ -244,6 +270,7 @@ impl PoConverter {
 
 #[derive(Debug, Default, Clone)]
 struct PoEntry {
+    msgctxt: Option<String>,
     msgid: String,
     msgstr: String,
 }

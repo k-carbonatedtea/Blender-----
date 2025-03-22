@@ -69,8 +69,8 @@ impl CsvConverter {
             }
             
             // 获取源文本和目标文本
-            let msgid = &entries[0];
-            let msgstr = &entries[1];
+            let msgid = &entries[1];
+            let msgstr = &entries[0];
             
             // 跳过空的源文本
             if msgid.trim().is_empty() {

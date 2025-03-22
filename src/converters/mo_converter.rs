@@ -67,12 +67,19 @@ impl MoConverter {
                 Err(_) => return Err(format!("MO文件包含无效的UTF-8字符串")),
             };
             
+            let (msgctxt, orig_text) = if let Some(idx) = orig.find('\x04') {
+                let (ctx, text) = orig.split_at(idx);
+                (Some(ctx.to_string()), text[1..].to_string())
+            } else {
+                (None, orig)
+            };
+            
             let trans = match String::from_utf8(buffer[trans_str_offset as usize..(trans_str_offset + trans_len) as usize].to_vec()) {
                 Ok(s) => s,
                 Err(_) => return Err(format!("MO文件包含无效的UTF-8字符串")),
             };
             
-            Ok(MoEntry { orig_text: orig, trans_text: trans })
+            Ok(MoEntry { msgctxt, orig_text: orig_text, trans_text: trans })
         }).collect::<Result<Vec<_>, String>>()?;
         
         // 首先处理头部信息
@@ -112,6 +119,11 @@ impl MoConverter {
                 continue; // 已经处理过头部了
             }
             
+            // 写入msgctxt(如果存在)
+            if let Some(ctx) = &entry.msgctxt {
+                Self::write_po_string(&mut writer, "msgctxt", ctx)?;
+            }
+            
             // 写入msgid
             Self::write_po_string(&mut writer, "msgid", &entry.orig_text)?;
             
@@ -126,17 +138,17 @@ impl MoConverter {
     
     /// 写入PO格式的字符串
     fn write_po_string<W: Write>(writer: &mut W, prefix: &str, content: &str) -> Result<(), String> {
-        if content.contains('\n') {
-            // 多行文本处理
+        let escaped = Self::escape_po_string(content);
+        
+        if content.contains('\n') || content.len() > 80 {
+            // 长字符串或多行文本使用空引号行格式
             writeln!(writer, "{} \"\"", prefix).map_err(|e| format!("写入PO文件失败: {}", e))?;
             
-            for line in content.lines() {
-                let escaped = Self::escape_po_string(line);
-                writeln!(writer, "\"{}\\n\"", escaped).map_err(|e| format!("写入PO文件失败: {}", e))?;
+            for line in escaped.lines() {
+                writeln!(writer, "\"{}\\n\"", line).map_err(|e| format!("写入PO文件失败: {}", e))?;
             }
         } else {
-            // 单行文本处理
-            let escaped = Self::escape_po_string(content);
+            // 短字符串直接写在一行
             writeln!(writer, "{} \"{}\"", prefix, escaped).map_err(|e| format!("写入PO文件失败: {}", e))?;
         }
         
@@ -163,6 +175,7 @@ impl MoConverter {
 
 // MO条目结构体，用于并行处理
 struct MoEntry {
+    msgctxt: Option<String>,
     orig_text: String,
     trans_text: String,
 }
