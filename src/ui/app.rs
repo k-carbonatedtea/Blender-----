@@ -665,9 +665,16 @@ impl App {
                         
                         // 如果正在合并中，显示进度动画
                         if self.state.is_merging {
-                            let text = format!("合并中{}", ".".repeat(((self.state.merge_progress_anim / 10) % 4) as usize));
+                            let progress_text = if self.state.merge_progress >= 0.99 {
+                                "合并完成".to_string()
+                            } else {
+                                // 显示百分比进度
+                                let percent = (self.state.merge_progress * 100.0) as i32;
+                                format!("合并中 {}%", percent)
+                            };
+                            
                             ui.add(egui::ProgressBar::new(self.state.merge_progress)
-                                .text(RichText::new(text).color(Color32::LIGHT_BLUE))
+                                .text(RichText::new(progress_text).color(Color32::LIGHT_BLUE))
                                 .fill(Color32::LIGHT_BLUE)
                                 .animate(true));
                         } else {
@@ -713,14 +720,37 @@ impl App {
                                     // 缓存合并PO的路径
                                     let cached_po_path = cache_dir.join("cached_merged.po");
                                     
-                                    // 更新进度 25%
-                                    let _ = tx.send(MergeStatus::Progress(0.25));
+                                    // 更新进度 - 添加更多的进度点
+                                    let _ = tx.send(MergeStatus::Progress(0.1)); // 10%
+                                    std::thread::sleep(std::time::Duration::from_millis(100));
+                                    
+                                    let _ = tx.send(MergeStatus::Progress(0.2)); // 20%
+                                    std::thread::sleep(std::time::Duration::from_millis(100));
                                     
                                     // 合并PO文件
                                     match po_merger::merge_po_files(&po_files, &cached_po_path, ignore_main) {
                                         Ok(_) => {
-                                            // 更新进度 75%
-                                            let _ = tx.send(MergeStatus::Progress(0.75));
+                                            // 更新进度 - 添加更多的进度点
+                                            let _ = tx.send(MergeStatus::Progress(0.3)); // 30%
+                                            std::thread::sleep(std::time::Duration::from_millis(100));
+                                            
+                                            let _ = tx.send(MergeStatus::Progress(0.4)); // 40%
+                                            std::thread::sleep(std::time::Duration::from_millis(100));
+                                            
+                                            let _ = tx.send(MergeStatus::Progress(0.5)); // 50%
+                                            std::thread::sleep(std::time::Duration::from_millis(100));
+
+                                            let _ = tx.send(MergeStatus::Progress(0.6)); // 60%
+                                            std::thread::sleep(std::time::Duration::from_millis(100));
+
+                                            let _ = tx.send(MergeStatus::Progress(0.7)); // 70%
+                                            std::thread::sleep(std::time::Duration::from_millis(100));
+                                            
+                                            let _ = tx.send(MergeStatus::Progress(0.8)); // 80%
+                                            std::thread::sleep(std::time::Duration::from_millis(100));
+
+                                            let _ = tx.send(MergeStatus::Progress(0.9)); // 90%
+                                            
                                             
                                             // 完成
                                             let _ = tx.send(MergeStatus::Completed(cached_po_path));
@@ -1801,6 +1831,18 @@ impl App {
         // 更新动画计数器
         if self.state.is_merging {
             self.state.merge_progress_anim += 1;
+            
+            // 添加平滑过渡效果
+            // 如果有目标进度，则逐渐接近该进度
+            if let Some(target_progress) = self.state.target_merge_progress {
+                if (target_progress - self.state.merge_progress).abs() > 0.001 {
+                    // 增加插值速率，使进度条更快地接近目标值
+                    self.state.merge_progress += (target_progress - self.state.merge_progress) * 0.1;
+                } else {
+                    // 如果已经非常接近目标，直接设置为目标值
+                    self.state.merge_progress = target_progress;
+                }
+            }
         }
         
         if let Ok(status) = self.merge_rx.try_recv() {
@@ -1808,16 +1850,35 @@ impl App {
                 MergeStatus::Started => {
                     self.state.is_merging = true;
                     self.state.merge_progress = 0.0;
+                    self.state.target_merge_progress = Some(0.0);
                     self.state.add_log("开始合并PO文件...");
                 },
                 MergeStatus::Progress(progress) => {
-                    self.state.merge_progress = progress;
-                    self.state.add_log(&format!("合并进度: {}%", (progress * 100.0) as i32));
+                    // 设置目标进度，而不是直接设置当前进度
+                    self.state.target_merge_progress = Some(progress);
+                    
+                    // 从进度更新日志，确保显示百分比
+                    let percent = (progress * 100.0) as i32;
+                    self.state.add_log(&format!("合并进度: {}%", percent));
+                    
+                    // 移除中间停顿的逻辑，让进度条直接平滑过渡到目标值
+                    // 不再需要特殊处理99%的情况
                 },
                 MergeStatus::Completed(path) => {
-                    self.state.is_merging = false;
+                    // 先设置进度为100%，再设置合并状态为false
                     self.state.merge_progress = 1.0;
+                    self.state.target_merge_progress = Some(1.0);
                     
+                    // 添加一个短暂延迟，让用户能看到100%的进度
+                    // 在实际应用中，可以使用一个计时器或帧计数器来实现
+                    self.state.add_log("合并完成: 100%");
+                    
+                    // 延迟设置合并状态为false，让用户能看到"合并完成"
+                    // 这里我们不立即设置is_merging为false，而是在几帧后设置
+                    // 可以添加一个计数器字段来实现
+                    self.state.merge_complete_countdown = Some(30); // 30帧后设置为false
+                    
+                    // 检查是否为 OpenAI 响应（使用 PathBuf 传递文本响应）
                     // 检查是否为 OpenAI 响应（使用 PathBuf 传递文本响应）
                     if path.is_absolute() {
                         // 正常的文件路径，表示合并完成
@@ -2371,14 +2432,27 @@ impl App {
             // 缓存合并PO的路径
             let cached_po_path = cache_dir.join("cached_merged.po");
             
-            // 更新进度 25%
-            let _ = tx.send(MergeStatus::Progress(0.25));
+            // 更新进度 - 添加更多的进度点
+            let _ = tx.send(MergeStatus::Progress(0.1)); // 10%
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            
+            let _ = tx.send(MergeStatus::Progress(0.2)); // 20%
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            
+            let _ = tx.send(MergeStatus::Progress(0.3)); // 30%
             
             // 合并PO文件
             match po_merger::merge_po_files(&po_files, &cached_po_path, ignore_main) {
                 Ok(_) => {
-                    // 更新进度 75%
-                    let _ = tx.send(MergeStatus::Progress(0.75));
+                    // 更新进度 - 添加更多的进度点
+                    let _ = tx.send(MergeStatus::Progress(0.5)); // 50%
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    
+                    let _ = tx.send(MergeStatus::Progress(0.9)); // 70%
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    
+                    let _ = tx.send(MergeStatus::Progress(1.0)); // 100%
+                    std::thread::sleep(std::time::Duration::from_millis(100));
                     
                     // 完成
                     let _ = tx.send(MergeStatus::Completed(cached_po_path));
@@ -2786,6 +2860,16 @@ impl eframe::App for App {
         
         // Process merge status updates
         self.process_merge_status();
+        
+        // 处理合并完成倒计时
+        if let Some(countdown) = self.state.merge_complete_countdown {
+            if countdown > 0 {
+                self.state.merge_complete_countdown = Some(countdown - 1);
+            } else {
+                self.state.is_merging = false;
+                self.state.merge_complete_countdown = None;
+            }
+        }
         
         // 设置主题
         let visuals = crate::models::ThemeManager::get_visuals(&self.config.theme);

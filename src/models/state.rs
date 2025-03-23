@@ -41,6 +41,7 @@ pub struct AppState {
     pub is_merging: bool,
     pub merge_progress: f32,
     pub merge_progress_anim: u32,
+    pub target_merge_progress: Option<f32>,
     pub show_help: bool,
     pub rename_mod_index: Option<usize>,
     pub rename_mod_name: String,
@@ -57,6 +58,7 @@ pub struct AppState {
     pub new_custom_model_id: String,
     pub new_custom_model_description: String,
     pub editing_model_index: Option<usize>,
+    pub merge_complete_countdown: Option<u32>,
 }
 
 impl Default for AppState {
@@ -87,6 +89,7 @@ impl Default for AppState {
             is_merging: false,
             merge_progress: 0.0,
             merge_progress_anim: 0,
+            target_merge_progress: None,
             show_help: false,
             rename_mod_index: None,
             rename_mod_name: String::new(),
@@ -103,6 +106,7 @@ impl Default for AppState {
             new_custom_model_id: String::new(),
             new_custom_model_description: String::new(),
             editing_model_index: None,
+            merge_complete_countdown: None,
         }
     }
 }

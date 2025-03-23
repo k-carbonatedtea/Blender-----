@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::sync::{Arc, Mutex};
 use std::error::Error;
+use rayon::prelude::*; // 添加 Rayon 支持
 
 // PO条目结构
 #[derive(Debug, Clone)]
@@ -66,13 +67,18 @@ pub fn merge_po_files(input_files: &[PathBuf], output_file: impl AsRef<Path>, ig
     let entries: Arc<Mutex<HashMap<(Option<String>, String), PoEntry>>> = Arc::new(Mutex::new(HashMap::new()));
     
     // 记录第一个文件的头部信息
-    let mut header = String::new();
-    let mut has_header = false;
+    let header = Arc::new(Mutex::new(String::new()));
+    let has_header = Arc::new(Mutex::new(false));
 
-    // 处理所有输入文件
-    for (file_index, file_path) in input_files.iter().enumerate() {
+    // 并行处理所有输入文件
+    input_files.par_iter().enumerate().try_for_each(|(file_index, file_path)| {
         let file = File::open(file_path).map_err(|e| format!("无法打开文件 {}: {}", file_path.display(), e))?;
         let reader = BufReader::new(file);
+        let lines: Vec<String> = reader.lines()
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| format!("读取文件时出错: {}", e))?;
+        
+        let mut current_entries = Vec::new();
         let mut current_entry = PoEntry::default();
         let mut state = ParseState::None;
         let mut line_number = 0;
@@ -82,21 +88,20 @@ pub fn merge_po_files(input_files: &[PathBuf], output_file: impl AsRef<Path>, ig
             .to_string_lossy()
             .to_string();
 
-        for line in reader.lines() {
+        for line in lines {
             line_number += 1;
-            let line = line.map_err(|e| format!("读取文件时出错: {}", e))?;
             let trimmed = line.trim();
 
             // 处理空行 - 表示一个条目的结束
             if trimmed.is_empty() {
                 if !current_entry.msgid.is_empty() {
                     // 处理头部信息
-                    if file_index == 0 && current_entry.msgid == "\"\"" && !has_header {
-                        header = current_entry.msgstr.clone();
-                        has_header = true;
+                    if file_index == 0 && current_entry.msgid.is_empty() && !*has_header.lock().unwrap() {
+                        *header.lock().unwrap() = current_entry.msgstr.clone();
+                        *has_header.lock().unwrap() = true;
                     } else {
-                        // 存储条目
-                        store_entry(&entries, current_entry.clone(), file_index, ignore_main_entries, &first_file_name)?;
+                        // 收集条目
+                        current_entries.push(current_entry.clone());
                     }
                 }
                 current_entry = PoEntry {
@@ -150,20 +155,24 @@ pub fn merge_po_files(input_files: &[PathBuf], output_file: impl AsRef<Path>, ig
             }
         }
 
-        // 处理文件最后一个条目
         if !current_entry.msgid.is_empty() {
-            store_entry(&entries, current_entry, file_index, ignore_main_entries, &first_file_name)?;
+            current_entries.push(current_entry);
         }
-    }
+
+        // 批量存储条目，减少锁竞争
+        store_entries(&entries, current_entries, file_index, ignore_main_entries, &first_file_name)?;
+        
+        Ok(())
+    })?;
 
     // 写入合并后的文件
     let mut output = File::create(&output_file)
         .map_err(|e| format!("无法创建输出文件: {}", e))?;
 
     // 写入头部信息
-    if has_header {
+    if *has_header.lock().unwrap() {
         writeln!(output, "msgid \"\"").map_err(|e| format!("写入文件时出错: {}", e))?;
-        writeln!(output, "{}", header).map_err(|e| format!("写入文件时出错: {}", e))?;
+        writeln!(output, "{}", *header.lock().unwrap()).map_err(|e| format!("写入文件时出错: {}", e))?;
         writeln!(output).map_err(|e| format!("写入文件时出错: {}", e))?;
     }
 
@@ -213,39 +222,37 @@ pub fn merge_po_files(input_files: &[PathBuf], output_file: impl AsRef<Path>, ig
     Ok(())
 }
 
-// 存储PO条目
-fn store_entry(
+// 批量存储PO条目
+fn store_entries(
     entries: &Arc<Mutex<HashMap<(Option<String>, String), PoEntry>>>,
-    entry: PoEntry,
+    new_entries: Vec<PoEntry>,
     file_index: usize,
     ignore_main_entries: bool,
     first_file_name: &str,
 ) -> Result<(), String> {
-    let mut entries = entries.lock().unwrap();
-    let key = (entry.msgctxt.clone(), entry.msgid.clone());
-
-    println!("Processing entry - msgid: {}, msgctxt: {:?}", 
-             entry.msgid, entry.msgctxt);
-
-    match entries.get(&key) {
-        Some(existing) => {
-            println!("Found existing entry with same key");
-            // 如果设置了ignore_main_entries且现有条目来自第一个文件,则保留现有翻译
-            if ignore_main_entries && existing.source_file == first_file_name {
-                return Ok(());
+    let mut entries_lock = entries.lock().unwrap();
+    
+    for entry in new_entries {
+        let key = (entry.msgctxt.clone(), entry.msgid.clone());
+        
+        match entries_lock.get(&key) {
+            Some(existing) => {
+                // 如果设置了ignore_main_entries且现有条目来自第一个文件,则保留现有翻译
+                if ignore_main_entries && existing.source_file == first_file_name {
+                    continue;
+                }
+                
+                // 根据优先级决定是否覆盖
+                if file_index == 0 || !existing.is_fuzzy {
+                    entries_lock.insert(key, entry);
+                }
+            },
+            None => {
+                entries_lock.insert(key, entry);
             }
-
-            // 根据优先级决定是否覆盖
-            if file_index == 0 || !existing.is_fuzzy {
-                entries.insert(key, entry);
-            }
-        },
-        None => {
-            println!("Adding new entry");
-            entries.insert(key, entry);
         }
     }
-
+    
     Ok(())
 }
 

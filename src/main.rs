@@ -135,7 +135,7 @@ fn main() -> eframe::Result<()> {
     };
     
     eframe::run_native(
-        "Blender 字典合并管理器 0.2.0 By:凌川雪",
+        "Blender 字典合并管理器 0.2.2 By:凌川雪",
         native_options,
         Box::new(|cc| {
             // 使用嵌入式字体数据
